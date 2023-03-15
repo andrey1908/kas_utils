@@ -76,6 +76,8 @@ def detect_aruco(images_files, K, D, aruco_size, extract_all_corners,
 
         marker_corners_all.append(marker_corners)
 
+        print(f"{image_file} : detected {n} marker{'' if n == 1 else 's'}")
+
         if vis_folder is not None:
             vis_image = image.copy()
             cv2.aruco.drawDetectedMarkers(vis_image, corners)
