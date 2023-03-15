@@ -13,19 +13,22 @@ def build_parser():
     parser.add_argument('-ext', '--images-extension', type=str, default='jpg')
     parser.add_argument('-calib', '--camera-calibration', required=True, type=str)
     parser.add_argument('-size', '--aruco-size', required=True, type=float)
+    parser.add_argument('-all-corns', '--extract-all-corners', action='store_true')
     parser.add_argument('-out', '--out-file', required=True, type=str)
     parser.add_argument('-vis-fld', '--vis-folder', type=str)
     return parser
 
 
-def detect_images(images_files, K, D, aruco_size, out_file, vis_folder=None):
-    os.makedirs(osp.dirname(out_file), exist_ok=True)
+def detect_images(images_files, K, D, aruco_size, extract_all_corners,
+        out_file, vis_folder=None):
+    if len(osp.dirname(out_file)) != 0:
+        os.makedirs(osp.dirname(out_file), exist_ok=True)
     if args.vis_folder is not None:
         os.makedirs(args.vis_folder, exist_ok=True)
 
     aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_1000)
     aruco_params = cv2.aruco.DetectorParameters_create()
-    tl_corners = list()
+    marker_corners_all = list()
     for image_file in images_files:
         image = cv2.imread(image_file)
         corners, ids, _ = \
@@ -36,24 +39,31 @@ def detect_images(images_files, K, D, aruco_size, out_file, vis_folder=None):
         marker_pose = np.eye(4)
         marker_pose[0:3, 0:3] = cv2.Rodrigues(rvecs)[0]
         marker_pose[0:3, 3] = tvecs[0, 0]
-        tl_corner_in_marker_frame = np.array(
-            [-aruco_size / 2,
-             aruco_size / 2,
-             0,
-             1])
-        tl_corner = np.matmul(marker_pose, tl_corner_in_marker_frame)
-        tl_corners.append(tl_corner[0:3])
+        corners_in_marker_frame = list()
+        for sx, sy in [(-1, 1), (1, 1), (1, -1), (-1, -1)]:
+            # top left corner first
+            corner_in_marker_frame = np.array(
+                [aruco_size / 2 * sx,
+                 aruco_size / 2 * sy,
+                 0, 1]).reshape(-1, 1)
+            corners_in_marker_frame.append(corner_in_marker_frame)
+            if not extract_all_corners:
+                break
+        corners_in_marker_frame = np.array(corners_in_marker_frame)
+        marker_corners = np.matmul(marker_pose, corners_in_marker_frame)
+        marker_corners = marker_corners[:, 0:3, 0]
+        marker_corners_all.append(marker_corners)
 
         if vis_folder is not None:
             vis_image = image.copy()
             cv2.aruco.drawDetectedMarkers(vis_image, corners)
             cv2.drawFrameAxes(vis_image, K, D, rvecs, tvecs, aruco_size / 2)
-            
+
             vis_image_file = osp.join(
                 vis_folder, Path(image_file).stem + '_vis.jpg')
             cv2.imwrite(vis_image_file, vis_image)
-    tl_corners = np.array(tl_corners)
-    np.save(out_file, tl_corners)
+    marker_corners_all = np.vstack(marker_corners_all)
+    np.save(out_file, marker_corners_all)
 
 
 if __name__ == "__main__":
@@ -68,5 +78,5 @@ if __name__ == "__main__":
     K = camera_calibration['K']
     D = camera_calibration['D']
 
-    detect_images(images_files, K, D, args.aruco_size, args.out_file,
-        vis_folder=args.vis_folder)
+    detect_images(images_files, K, D, args.aruco_size, args.extract_all_corners,
+        args.out_file, vis_folder=args.vis_folder)
