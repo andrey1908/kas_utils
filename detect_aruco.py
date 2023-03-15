@@ -19,7 +19,7 @@ def build_parser():
     return parser
 
 
-def detect_images(images_files, K, D, aruco_size, extract_all_corners,
+def detect_aruco(images_files, K, D, aruco_size, extract_all_corners,
         out_file, vis_folder=None):
     if len(osp.dirname(out_file)) != 0:
         os.makedirs(osp.dirname(out_file), exist_ok=True)
@@ -101,5 +101,5 @@ if __name__ == "__main__":
     K = camera_calibration['K']
     D = camera_calibration['D']
 
-    detect_images(images_files, K, D, args.aruco_size, args.extract_all_corners,
+    detect_aruco(images_files, K, D, args.aruco_size, args.extract_all_corners,
         args.out_file, vis_folder=args.vis_folder)
