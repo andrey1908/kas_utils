@@ -77,7 +77,7 @@ def detect_aruco(image, K, D, aruco_sizes, extract_all_corners,
     # corners_in_marker_frames.shape = (1 or 4, n, 4, 1)
 
     marker_corners = np.matmul(marker_poses, corners_in_marker_frames)
-    marker_corners = marker_corners[:, :, 0:3, 0].reshape(-1, 3)
+    marker_corners = marker_corners[:, :, 0:3, 0].swapaxes(0, 1).reshape(-1, 3)
     # marker_corners.shape = (n or n * 4, 3)
 
     return marker_corners, \
