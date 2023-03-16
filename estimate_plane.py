@@ -52,25 +52,18 @@ def estimate_plane(points_file):
     a = plane[0]
     b = plane[1]
     c = plane[2]
-    src = np.array([0., 0., 1.])
-    tgt = np.array([-a, -b, 1])
-    tgt /= np.linalg.norm(tgt)
-    avr = src + tgt
-    assert np.linalg.norm(avr) > 0.01
-    avr /= np.linalg.norm(avr)
-    avr *= np.pi
-    R1, _ = cv2.Rodrigues(avr)
+    z_axis = np.array([-a, -b, 1])
+    z_axis /= np.linalg.norm(z_axis)
+    x_axis = project_to_plane(points[0], plane) - origin
+    x_axis /= np.linalg.norm(x_axis)
+    y_axis = np.cross(z_axis, x_axis)
+    y_axis /= np.linalg.norm(y_axis)
 
-    src = np.array([1., 0., 0.])
-    tgt = project_to_plane(points[0], plane) - origin
-    tgt = np.matmul(np.linalg.inv(R1), tgt)
-    tgt /= np.linalg.norm(tgt)
-    sine = np.linalg.norm(np.cross(src, tgt))
-    cosine = np.dot(src, tgt)
-    theta = np.math.atan2(sine, cosine)
-    R2, _ = cv2.Rodrigues(np.array([0., 0., 1.]) * theta)
+    x_axis = np.expand_dims(x_axis, axis=-1)
+    y_axis = np.expand_dims(y_axis, axis=-1)
+    z_axis = np.expand_dims(z_axis, axis=-1)
 
-    R = np.matmul(R1, R2)
+    R = np.hstack((x_axis, y_axis, z_axis))
     T = np.eye(4)
     T[0:3, 0:3] = R
     T[0:3, 3] = origin
