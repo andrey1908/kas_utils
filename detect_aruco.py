@@ -81,7 +81,8 @@ def detect_aruco(images_files, K, D, aruco_size, extract_all_corners,
         if vis_folder is not None:
             vis_image = image.copy()
             cv2.aruco.drawDetectedMarkers(vis_image, corners)
-            cv2.drawFrameAxes(vis_image, K, D, rvecs, tvecs, aruco_size / 2)
+            for i in range(n):
+                cv2.drawFrameAxes(vis_image, K, D, rvecs[i], tvecs[i], aruco_size / 2)
 
             vis_image_file = osp.join(
                 vis_folder, Path(image_file).stem + '_vis.jpg')
