@@ -59,6 +59,10 @@ def estimate_plane(points_file):
     y_axis = np.cross(z_axis, x_axis)
     y_axis /= np.linalg.norm(y_axis)
 
+    if np.dot(z_axis, origin) > 0:
+        y_axis *= -1
+        z_axis *= -1
+
     x_axis = np.expand_dims(x_axis, axis=-1)
     y_axis = np.expand_dims(y_axis, axis=-1)
     z_axis = np.expand_dims(z_axis, axis=-1)
