@@ -84,8 +84,12 @@ def detect_aruco(image, K, D, aruco_sizes, extract_all_corners,
         {'n': n, 'corners': corners, 'ids': ids, 'rvecs': rvecs, 'tvecs': tvecs}
 
 
-def draw_aruco(image, corners, K=None, D=None, rvecs=None, tvecs=None, frames_sizes=None):
-    cv2.aruco.drawDetectedMarkers(image, corners)
+def draw_aruco(image, corners, ids=None,
+        K=None, D=None, rvecs=None, tvecs=None, frames_sizes=None):
+    if ids is not None:
+        cv2.aruco.drawDetectedMarkers(image, corners, ids)
+    else:
+        cv2.aruco.drawDetectedMarkers(image, corners)
     if all(item is not None for item in (K, D, rvecs, tvecs, frames_sizes)):
         n = rvecs.shape[0]
         if not isinstance(frames_sizes, (list, tuple, np.ndarray)):
