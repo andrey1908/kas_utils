@@ -115,6 +115,7 @@ def detect_aruco_common(images_files, K, D, aruco_size, extract_all_corners,
 
     aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_1000)
     aruco_params = cv2.aruco.DetectorParameters_create()
+    # aruco_params.adaptiveThreshConstant = 14
     marker_corners_all = list()
     for image_file in images_files:
         image = cv2.imread(image_file)
