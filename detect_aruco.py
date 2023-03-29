@@ -23,14 +23,8 @@ def detect_aruco(image, K, D, aruco_sizes, extract_all_corners,
         aruco_dict, aruco_params):
     corners, ids, rejected = \
         cv2.aruco.detectMarkers(image, aruco_dict, parameters=aruco_params)
-    n = corners.shape[0]
-    n_rejected = rejected.shape[0]
-
-    if n_rejected != 0:
-        rejected = np.array(rejected)
-        # rejected.shape = (n_rejected, 1, 4, 2)
-    else:
-        rejected = np.empty((0, 1, 4, 2))
+    n = len(corners)
+    n_rejected = len(rejected)
 
     if n != 0:
         corners = np.array(corners)
@@ -94,14 +88,21 @@ def detect_aruco(image, K, D, aruco_sizes, extract_all_corners,
     else:
         corners = np.empty((0, 1, 4, 2))
         ids = np.empty((0, 1))
-        marker_corners_3d = np.empty((0, 3))
         rvecs = np.empty((0, 1, 3))
         tvecs = np.empty((0, 1, 3))
+        marker_corners_3d = np.empty((0, 3))
 
-    return marker_corners_3d, \
-        {'n': n, 'corners': corners, 'ids': ids,
+    if n_rejected != 0:
+        rejected = np.array(rejected)
+        # rejected.shape = (n_rejected, 1, 4, 2)
+    else:
+        rejected = np.empty((0, 1, 4, 2))
+
+    return {
+        'corners': corners, 'ids': ids, 'n': n,
         'rejected': rejected, 'n_rejected': n_rejected,
-        'rvecs': rvecs, 'tvecs': tvecs}
+        'rvecs': rvecs, 'tvecs': tvecs,
+        'marker_corners_3d': marker_corners_3d}
 
 
 def draw_aruco(image, corners, ids=None,
