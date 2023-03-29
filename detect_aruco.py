@@ -61,28 +61,28 @@ def detect_aruco(image, K, D, aruco_sizes, extract_all_corners,
         marker_poses[i, 0:3, 3] = tvecs[i, 0]
     # marker_poses.shape = (n, 4, 4)
 
-    corners_in_marker_frames = list()
+    corners_3d_in_marker_frames = list()
     for i in range(n):
-        corners_in_single_marker_frame = list()
+        corners_3d_in_single_marker_frame = list()
         for sx, sy in [(-1, 1), (1, 1), (1, -1), (-1, -1)]:
             # top left corner first
-            single_corner_in_marker_frame = np.array(
+            single_corner_3d_in_marker_frame = np.array(
                 [aruco_sizes[i] / 2 * sx,
                  aruco_sizes[i] / 2 * sy,
                  0, 1]).reshape(-1, 1)
-            corners_in_single_marker_frame.append(single_corner_in_marker_frame)
+            corners_3d_in_single_marker_frame.append(single_corner_3d_in_marker_frame)
             if not extract_all_corners:
                 break
-        corners_in_single_marker_frame = np.array(corners_in_single_marker_frame)
-        corners_in_marker_frames.append(corners_in_single_marker_frame)
-    corners_in_marker_frames = np.array(corners_in_marker_frames).swapaxes(0, 1)
-    # corners_in_marker_frames.shape = (1 or 4, n, 4, 1)
+        corners_3d_in_single_marker_frame = np.array(corners_3d_in_single_marker_frame)
+        corners_3d_in_marker_frames.append(corners_3d_in_single_marker_frame)
+    corners_3d_in_marker_frames = np.array(corners_3d_in_marker_frames).swapaxes(0, 1)
+    # corners_3d_in_marker_frames.shape = (1 or 4, n, 4, 1)
 
-    marker_corners = np.matmul(marker_poses, corners_in_marker_frames)
-    marker_corners = marker_corners[:, :, 0:3, 0].swapaxes(0, 1).reshape(-1, 3)
-    # marker_corners.shape = (n or n * 4, 3)
+    marker_corners_3d = np.matmul(marker_poses, corners_3d_in_marker_frames)
+    marker_corners_3d = marker_corners_3d[:, :, 0:3, 0].swapaxes(0, 1).reshape(-1, 3)
+    # marker_corners_3d.shape = (n or n * 4, 3)
 
-    return marker_corners, \
+    return marker_corners_3d, \
         {'n': n, 'corners': corners, 'ids': ids, 'rvecs': rvecs, 'tvecs': tvecs}
 
 
