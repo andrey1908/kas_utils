@@ -32,7 +32,9 @@ def detect_aruco(image, K, D, aruco_sizes, extract_all_corners,
     ids = np.take_along_axis(ids, ind, axis=0)
     corners = np.take_along_axis(corners, np.expand_dims(ind, axis=(-1, -2)), axis=0)
 
-    if not isinstance(aruco_sizes, (list, tuple, np.ndarray)):
+    if isinstance(aruco_sizes, (list, tuple)):
+        aruco_sizes = np.array(aruco_sizes)
+    elif not isinstance(aruco_sizes, np.ndarray):
         aruco_sizes = np.array([aruco_sizes] * n)
     if len(aruco_sizes.shape) != 1:
         raise RuntimeError(f"Use list, tuple or np.ndarray to pass multiple aruco sizes.")
