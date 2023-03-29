@@ -50,8 +50,8 @@ def detect_aruco(image, K, D, aruco_sizes, aruco_dict, aruco_params):
         for i in range(n):
             rvec, tvec, _ = \
                 cv2.aruco.estimatePoseSingleMarkers(corners[i], aruco_sizes[i], K, D)
-            rvecs.append(rvec)
-            tvecs.append(tvec)
+            rvecs.append(rvec[0])
+            tvecs.append(tvec[0])
         rvecs = np.array(rvecs)
         tvecs = np.array(tvecs)
         # rvecs.shape = (n, 1, 3)
