@@ -110,8 +110,8 @@ def detect_aruco_common(images_files, K, D, aruco_size, extract_all_corners,
         out_file, vis_folder=None):
     if len(osp.dirname(out_file)) != 0:
         os.makedirs(osp.dirname(out_file), exist_ok=True)
-    if args.vis_folder is not None:
-        os.makedirs(args.vis_folder, exist_ok=True)
+    if vis_folder is not None:
+        os.makedirs(vis_folder, exist_ok=True)
 
     aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_1000)
     aruco_params = cv2.aruco.DetectorParameters_create()
