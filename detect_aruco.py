@@ -77,16 +77,16 @@ def detect_aruco(image, K, D, aruco_sizes, aruco_dict, aruco_params):
         corners_3d_in_marker_frames = np.array(corners_3d_in_marker_frames).swapaxes(0, 1)
         # corners_3d_in_marker_frames.shape = (4, n, 4, 1)
 
-        marker_corners_3d = np.matmul(marker_poses, corners_3d_in_marker_frames)
-        marker_corners_3d = marker_corners_3d[:, :, 0:3, 0].swapaxes(0, 1)
-        marker_corners_3d = np.expand_dims(marker_corners_3d, axis=1)
-        # marker_corners_3d.shape = (n, 1, 4, 3)
+        corners_3d = np.matmul(marker_poses, corners_3d_in_marker_frames)
+        corners_3d = corners_3d[:, :, 0:3, 0].swapaxes(0, 1)
+        corners_3d = np.expand_dims(corners_3d, axis=1)
+        # corners_3d.shape = (n, 1, 4, 3)
     else:
         corners = np.empty((0, 1, 4, 2))
         ids = np.empty((0, 1))
         rvecs = np.empty((0, 1, 3))
         tvecs = np.empty((0, 1, 3))
-        marker_corners_3d = np.empty((0, 1, 4, 3))
+        corners_3d = np.empty((0, 1, 4, 3))
 
     if n_rejected != 0:
         rejected = np.array(rejected)
@@ -98,7 +98,7 @@ def detect_aruco(image, K, D, aruco_sizes, aruco_dict, aruco_params):
         'corners': corners, 'ids': ids, 'n': n,
         'rejected': rejected, 'n_rejected': n_rejected,
         'rvecs': rvecs, 'tvecs': tvecs,
-        'marker_corners_3d': marker_corners_3d}
+        'corners_3d': corners_3d}
 
 
 def draw_aruco(image, corners, ids=None,
