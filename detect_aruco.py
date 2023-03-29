@@ -13,14 +13,12 @@ def build_parser():
     parser.add_argument('-ext', '--images-extension', type=str, default='jpg')
     parser.add_argument('-calib', '--camera-calibration', required=True, type=str)
     parser.add_argument('-size', '--aruco-size', required=True, type=float)
-    parser.add_argument('-all-corns', '--extract-all-corners', action='store_true')
     parser.add_argument('-out', '--out-file', required=True, type=str)
     parser.add_argument('-vis-fld', '--vis-folder', type=str)
     return parser
 
 
-def detect_aruco(image, K, D, aruco_sizes, extract_all_corners,
-        aruco_dict, aruco_params):
+def detect_aruco(image, K, D, aruco_sizes, aruco_dict, aruco_params):
     corners, ids, rejected = \
         cv2.aruco.detectMarkers(image, aruco_dict, parameters=aruco_params)
     n = len(corners)
@@ -69,22 +67,19 @@ def detect_aruco(image, K, D, aruco_sizes, extract_all_corners,
         for i in range(n):
             corners_3d_in_single_marker_frame = list()
             for sx, sy in [(-1, 1), (1, 1), (1, -1), (-1, -1)]:
-                # top left corner first
                 single_corner_3d_in_marker_frame = np.array(
                     [aruco_sizes[i] / 2 * sx,
                     aruco_sizes[i] / 2 * sy,
                     0, 1]).reshape(-1, 1)
                 corners_3d_in_single_marker_frame.append(single_corner_3d_in_marker_frame)
-                if not extract_all_corners:
-                    break
             corners_3d_in_single_marker_frame = np.array(corners_3d_in_single_marker_frame)
             corners_3d_in_marker_frames.append(corners_3d_in_single_marker_frame)
         corners_3d_in_marker_frames = np.array(corners_3d_in_marker_frames).swapaxes(0, 1)
-        # corners_3d_in_marker_frames.shape = (1 or 4, n, 4, 1)
+        # corners_3d_in_marker_frames.shape = (4, n, 4, 1)
 
         marker_corners_3d = np.matmul(marker_poses, corners_3d_in_marker_frames)
         marker_corners_3d = marker_corners_3d[:, :, 0:3, 0].swapaxes(0, 1).reshape(-1, 3)
-        # marker_corners_3d.shape = (n or n * 4, 3)
+        # marker_corners_3d.shape = (n * 4, 3)
     else:
         corners = np.empty((0, 1, 4, 2))
         ids = np.empty((0, 1))
@@ -127,7 +122,7 @@ def draw_aruco(image, corners, ids=None,
             cv2.drawFrameAxes(image, K, D, rvecs[i], tvecs[i], frames_sizes[i])
 
 
-def detect_aruco_common(images_files, K, D, aruco_size, extract_all_corners,
+def detect_aruco_common(images_files, K, D, aruco_size,
         out_file, vis_folder=None):
     if len(osp.dirname(out_file)) != 0:
         os.makedirs(osp.dirname(out_file), exist_ok=True)
@@ -141,7 +136,7 @@ def detect_aruco_common(images_files, K, D, aruco_size, extract_all_corners,
     for image_file in images_files:
         image = cv2.imread(image_file)
         marker_corners, verb = detect_aruco(image, K, D, aruco_size,
-            extract_all_corners, aruco_dict, aruco_params)
+            aruco_dict, aruco_params)
         marker_corners_all.append(marker_corners)
 
         n = verb['n']
@@ -174,5 +169,5 @@ if __name__ == "__main__":
     K = camera_calibration['K']
     D = camera_calibration['D']
 
-    detect_aruco_common(images_files, K, D, args.aruco_size, args.extract_all_corners,
+    detect_aruco_common(images_files, K, D, args.aruco_size,
         args.out_file, vis_folder=args.vis_folder)
