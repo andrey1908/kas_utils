@@ -133,20 +133,20 @@ def detect_aruco_common(images_files, K, D, aruco_size,
     aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_1000)
     aruco_params = cv2.aruco.DetectorParameters_create()
     # aruco_params.adaptiveThreshConstant = 14
-    marker_corners_all = list()
+    corners_3d_all = list()
     for image_file in images_files:
         image = cv2.imread(image_file)
-        marker_corners, verb = detect_aruco(image, K, D, aruco_size,
+        arucos = detect_aruco(image, K, D, aruco_size,
             aruco_dict, aruco_params)
-        marker_corners_all.append(marker_corners)
+        corners_3d_all.append(arucos['corners_3d'])
 
-        n = verb['n']
+        n = arucos['n']
         print(f"{image_file} : detected {n} marker{'' if n == 1 else 's'}")
 
         if vis_folder is not None:
-            corners = verb['corners']
-            rvecs = verb['rvecs']
-            tvecs = verb['tvecs']
+            corners = arucos['corners']
+            rvecs = arucos['rvecs']
+            tvecs = arucos['tvecs']
             vis_image = image.copy()
             draw_aruco(vis_image, corners, K=K, D=D,
                 rvecs=rvecs, tvecs=tvecs, frames_sizes=aruco_size / 2)
@@ -154,8 +154,8 @@ def detect_aruco_common(images_files, K, D, aruco_size,
                 vis_folder, Path(image_file).stem + '_vis.jpg')
             cv2.imwrite(vis_image_file, vis_image)
 
-    marker_corners_all = np.vstack(marker_corners_all)
-    np.save(out_file, marker_corners_all)
+    corners_3d_all = np.vstack(corners_3d_all)
+    np.save(out_file, corners_3d_all)
 
 
 if __name__ == "__main__":
