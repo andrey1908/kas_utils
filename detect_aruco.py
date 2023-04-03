@@ -80,15 +80,19 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None,
             corners_3d_in_marker_frames = list()
             for i in range(n):
                 corners_3d_in_single_marker_frame = list()
+                aruco_size = aruco_sizes[i]
                 for sx, sy in [(-1, 1), (1, 1), (1, -1), (-1, -1)]:
-                    single_corner_3d_in_marker_frame = np.array(
-                        [aruco_sizes[i] / 2 * sx,
-                        aruco_sizes[i] / 2 * sy,
-                        0, 1]).reshape(-1, 1)
+                    single_corner_3d_in_marker_frame = np.array([
+                        aruco_size / 2 * sx,
+                        aruco_size / 2 * sy,
+                        0, 1]).reshape(4, 1)
                     corners_3d_in_single_marker_frame.append(single_corner_3d_in_marker_frame)
                 corners_3d_in_single_marker_frame = np.array(corners_3d_in_single_marker_frame)
                 corners_3d_in_marker_frames.append(corners_3d_in_single_marker_frame)
-            corners_3d_in_marker_frames = np.array(corners_3d_in_marker_frames).swapaxes(0, 1)
+            corners_3d_in_marker_frames = np.array(corners_3d_in_marker_frames)
+            # corners_3d_in_marker_frames.shape = (n, 4, 4, 1)
+
+            corners_3d_in_marker_frames = corners_3d_in_marker_frames.swapaxes(0, 1)
             # corners_3d_in_marker_frames.shape = (4, n, 4, 1)
 
             corners_3d = np.matmul(marker_poses, corners_3d_in_marker_frames)
