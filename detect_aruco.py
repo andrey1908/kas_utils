@@ -148,7 +148,7 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
     return {
         'corners': corners, 'ids': ids, 'n': n,
         'rejected': rejected, 'n_rejected': n_rejected,
-        'rvecs': rvecs, 'tvecs': tvecs,
+        'rvecs': rvecs, 'tvecs': tvecs, 'n_poses': n_poses,
         'corners_3d': corners_3d}
 
 
