@@ -52,10 +52,20 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None,
             rvecs = list()
             tvecs = list()
             for i in range(n):
-                rvec, tvec, _ = \
-                    cv2.aruco.estimatePoseSingleMarkers(corners[i], aruco_sizes[i], K, D)
-                rvecs.append(rvec[0])
-                tvecs.append(tvec[0])
+                aruco_size = aruco_sizes[i]
+                obj = np.array([
+                    [-aruco_size / 2,  aruco_size / 2, 0],
+                    [ aruco_size / 2,  aruco_size / 2, 0],
+                    [ aruco_size / 2, -aruco_size / 2, 0],
+                    [-aruco_size / 2, -aruco_size / 2, 0]])
+                retval, rvec, tvec = \
+                    cv2.solvePnP(obj, corners[i], K, D, flags=cv2.SOLVEPNP_IPPE_SQUARE)
+                rvec = rvec.swapaxes(0, 1)
+                tvec = tvec.swapaxes(0, 1)
+                # rvec.shape = (1, 3)
+                # tvec.shape = (1, 3)
+                rvecs.append(rvec)
+                tvecs.append(tvec)
             rvecs = np.array(rvecs)
             tvecs = np.array(tvecs)
             # rvecs.shape = (n, 1, 3)
