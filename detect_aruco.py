@@ -20,9 +20,9 @@ def build_parser():
 
 def detect_aruco(image, K=None, D=None, aruco_sizes=None,
         aruco_dict=cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_1000),
-        aruco_params=cv2.aruco.DetectorParameters_create()):
+        params=cv2.aruco.DetectorParameters_create()):
     corners, ids, rejected = \
-        cv2.aruco.detectMarkers(image, aruco_dict, parameters=aruco_params)
+        cv2.aruco.detectMarkers(image, aruco_dict, parameters=params)
     n = len(corners)
     n_rejected = len(rejected)
 
