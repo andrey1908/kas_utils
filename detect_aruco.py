@@ -139,6 +139,12 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
     else:
         rejected = np.empty((0, 1, 4, 2))
 
+    # corners.shape = (n, 1, 4, 2)
+    # ids.shape = (n, 1)
+    # rejected.shape = (n_rejected, 1, 4, 2)
+    # rvecs.shape = (n, n_poses, 3)
+    # tvecs.shape = (n, n_poses, 3)
+    # corners_3d.shape = (n, n_poses, 4, 3)
     return {
         'corners': corners, 'ids': ids, 'n': n,
         'rejected': rejected, 'n_rejected': n_rejected,
