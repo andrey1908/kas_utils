@@ -18,7 +18,7 @@ def build_parser():
     return parser
 
 
-def detect_aruco(image, K=None, D=None, aruco_sizes=None,
+def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
         aruco_dict=cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_1000),
         params=cv2.aruco.DetectorParameters_create()):
     corners, ids, rejected = \
@@ -51,6 +51,10 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None,
 
             rvecs = list()
             tvecs = list()
+            if not use_generic:
+                n_poses = 1
+            else:
+                n_poses = 2
             for i in range(n):
                 aruco_size = aruco_sizes[i]
                 obj = np.array([
@@ -58,24 +62,43 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None,
                     [ aruco_size / 2,  aruco_size / 2, 0],
                     [ aruco_size / 2, -aruco_size / 2, 0],
                     [-aruco_size / 2, -aruco_size / 2, 0]])
-                retval, rvec, tvec = \
-                    cv2.solvePnP(obj, corners[i], K, D, flags=cv2.SOLVEPNP_IPPE_SQUARE)
-                rvec = rvec.swapaxes(0, 1)
-                tvec = tvec.swapaxes(0, 1)
-                # rvec.shape = (1, 3)
-                # tvec.shape = (1, 3)
+                if not use_generic:
+                    retval, rvec, tvec = \
+                        cv2.solvePnP(obj, corners[i], K, D,
+                            flags=cv2.SOLVEPNP_IPPE_SQUARE)
+                    rvec = rvec.swapaxes(0, 1)
+                    tvec = tvec.swapaxes(0, 1)
+                    # rvec.shape = (1, 3)
+                    # tvec.shape = (1, 3)
+                else:
+                    retval, rvec, tvec, reprojectionError = \
+                        cv2.solvePnPGeneric(obj, corners[i], K, D,
+                            flags=cv2.SOLVEPNP_IPPE_SQUARE,
+                            reprojectionError=np.empty(0, dtype=np.float))
+                    assert len(rvec) == n_poses
+                    assert reprojectionError[0][0] <= reprojectionError[1][0]
+                    rvec = np.array(rvec)
+                    tvec = np.array(tvec)
+                    # rvec.shape = (2, 3, 1)
+                    # tvec.shape = (2, 3, 1)
+
+                    rvec = rvec.squeeze()
+                    tvec = tvec.squeeze()
+                    # rvec.shape = (2, 3)
+                    # tvec.shape = (2, 3)
                 rvecs.append(rvec)
                 tvecs.append(tvec)
             rvecs = np.array(rvecs)
             tvecs = np.array(tvecs)
-            # rvecs.shape = (n, 1, 3)
-            # tvecs.shape = (n, 1, 3)
+            # rvecs.shape = (n, n_poses, 3)
+            # tvecs.shape = (n, n_poses, 3)
 
-            marker_poses = np.tile(np.eye(4), (n, 1, 1))
+            marker_poses = np.tile(np.eye(4), (n, n_poses, 1, 1))
             for i in range(n):
-                marker_poses[i, 0:3, 0:3], _ = cv2.Rodrigues(rvecs[i])
-                marker_poses[i, 0:3, 3] = tvecs[i, 0]
-            # marker_poses.shape = (n, 4, 4)
+                for j in range(n_poses):
+                    marker_poses[i, j, 0:3, 0:3], _ = cv2.Rodrigues(rvecs[i, j])
+                    marker_poses[i, j, 0:3, 3] = tvecs[i, j]
+            # marker_poses.shape = (n, n_poses, 4, 4)
 
             corners_3d_in_marker_frames = list()
             for i in range(n):
@@ -92,13 +115,13 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None,
             corners_3d_in_marker_frames = np.array(corners_3d_in_marker_frames)
             # corners_3d_in_marker_frames.shape = (n, 4, 4, 1)
 
-            corners_3d_in_marker_frames = corners_3d_in_marker_frames.swapaxes(0, 1)
-            # corners_3d_in_marker_frames.shape = (4, n, 4, 1)
+            corners_3d_in_marker_frames = \
+                np.expand_dims(corners_3d_in_marker_frames.swapaxes(0, 1), axis=2)
+            # corners_3d_in_marker_frames.shape = (4, n, 1, 4, 1)
 
             corners_3d = np.matmul(marker_poses, corners_3d_in_marker_frames)
-            corners_3d = corners_3d[:, :, 0:3, 0].swapaxes(0, 1)
-            corners_3d = np.expand_dims(corners_3d, axis=1)
-            # corners_3d.shape = (n, 1, 4, 3)
+            corners_3d = corners_3d[:, :, :, 0:3, 0].transpose(1, 2, 0, 3)
+            # corners_3d.shape = (n, n_poses, 4, 3)
         else:
             rvecs = None
             tvecs = None
@@ -106,9 +129,9 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None,
     else:
         corners = np.empty((0, 1, 4, 2))
         ids = np.empty((0, 1))
-        rvecs = np.empty((0, 1, 3))
-        tvecs = np.empty((0, 1, 3))
-        corners_3d = np.empty((0, 1, 4, 3))
+        rvecs = np.empty((0, n_poses, 3))
+        tvecs = np.empty((0, n_poses, 3))
+        corners_3d = np.empty((0, n_poses, 4, 3))
 
     if n_rejected != 0:
         rejected = np.array(rejected)
