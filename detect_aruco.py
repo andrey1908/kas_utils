@@ -26,6 +26,11 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
     n = len(corners)
     n_rejected = len(rejected)
 
+    if not use_generic:
+        n_poses = 1
+    else:
+        n_poses = 2
+
     if n != 0:
         corners = np.array(corners)
         ids = np.array(ids)
@@ -51,10 +56,6 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
 
             rvecs = list()
             tvecs = list()
-            if not use_generic:
-                n_poses = 1
-            else:
-                n_poses = 2
             for i in range(n):
                 aruco_size = aruco_sizes[i]
                 obj = np.array([
@@ -123,6 +124,7 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
             corners_3d = corners_3d[:, :, :, 0:3, 0].transpose(1, 2, 0, 3)
             # corners_3d.shape = (n, n_poses, 4, 3)
         else:
+            n_poses = 0
             rvecs = None
             tvecs = None
             corners_3d = None
