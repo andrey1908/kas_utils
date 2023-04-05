@@ -125,12 +125,14 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
             # corners_3d.shape = (n, n_poses, 4, 3)
         else:
             n_poses = 0
+            aruco_sizes = None
             rvecs = None
             tvecs = None
             corners_3d = None
     else:
         corners = np.empty((0, 1, 4, 2))
         ids = np.empty((0, 1))
+        aruco_sizes = np.empty((0,))
         rvecs = np.empty((0, n_poses, 3))
         tvecs = np.empty((0, n_poses, 3))
         corners_3d = np.empty((0, n_poses, 4, 3))
@@ -144,36 +146,27 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
     # corners.shape = (n, 1, 4, 2)
     # ids.shape = (n, 1)
     # rejected.shape = (n_rejected, 1, 4, 2)
+    # aruco_sizes.shape = (n,)
     # rvecs.shape = (n, n_poses, 3)
     # tvecs.shape = (n, n_poses, 3)
     # corners_3d.shape = (n, n_poses, 4, 3)
     return {
         'corners': corners, 'ids': ids, 'n': n,
         'rejected': rejected, 'n_rejected': n_rejected,
+        'aruco_sizes': aruco_sizes,
         'rvecs': rvecs, 'tvecs': tvecs, 'n_poses': n_poses,
         'corners_3d': corners_3d}
 
 
-def draw_aruco(image, corners, ids=None,
-        K=None, D=None, rvecs=None, tvecs=None, frames_sizes=None):
-    if ids is not None:
-        cv2.aruco.drawDetectedMarkers(image, corners, ids)
+def draw_aruco(image, arucos, draw_ids=False, K=None, D=None):
+    if draw_ids:
+        cv2.aruco.drawDetectedMarkers(image, arucos['corners'], arucos['ids'])
     else:
-        cv2.aruco.drawDetectedMarkers(image, corners)
-    if all(item is not None for item in (K, D, rvecs, tvecs, frames_sizes)):
-        n = rvecs.shape[0]
-        if not isinstance(frames_sizes, (list, tuple, np.ndarray)):
-            frames_sizes = np.array([frames_sizes] * n)
-        if len(frames_sizes.shape) != 1:
-            raise RuntimeError(
-                f"Use list, tuple or np.ndarray to pass multiple frames sizes.")
-        if tvecs.shape[0] != n or frames_sizes.shape[0] != n:
-            raise RuntimeError(
-                f"Num of rvecs - {n}, num of tvecs - {tvecs.shape[0]}, "
-                f"num of frames_sizes - {frames_sizes.shape[0]}. "
-                "All these should be equal.")
-        for i in range(n):
-            cv2.drawFrameAxes(image, K, D, rvecs[i], tvecs[i], frames_sizes[i])
+        cv2.aruco.drawDetectedMarkers(image, arucos['corners'])
+    if all(item is not None for item in (arucos['aruco_sizes'], K, D)):
+        for i in range(arucos['n']):
+            cv2.drawFrameAxes(image, K, D,
+                arucos['rvecs'][i], arucos['tvecs'][i], arucos['aruco_sizes'][i] / 2)
 
 
 def detect_aruco_common(images_files, K, D, aruco_size,
