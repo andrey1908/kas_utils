@@ -171,15 +171,18 @@ def get_corners_3d(arucos):
     return corners_3d
 
 
-def draw_aruco(image, arucos, draw_ids=False, K=None, D=None):
-    if draw_ids:
-        cv2.aruco.drawDetectedMarkers(image, arucos['corners'], arucos['ids'])
+def draw_aruco(image, arucos, draw_rejected_only=False, draw_ids=False, K=None, D=None):
+    if draw_rejected_only:
+        cv2.aruco.drawDetectedMarkers(image, arucos['rejected'])
     else:
-        cv2.aruco.drawDetectedMarkers(image, arucos['corners'])
-    if all(item is not None for item in (arucos['aruco_sizes'], K, D)):
-        for i in range(arucos['n']):
-            cv2.drawFrameAxes(image, K, D,
-                arucos['rvecs'][i], arucos['tvecs'][i], arucos['aruco_sizes'][i] / 2)
+        if draw_ids:
+            cv2.aruco.drawDetectedMarkers(image, arucos['corners'], arucos['ids'])
+        else:
+            cv2.aruco.drawDetectedMarkers(image, arucos['corners'])
+        if all(item is not None for item in (arucos['aruco_sizes'], K, D)):
+            for i in range(arucos['n']):
+                cv2.drawFrameAxes(image, K, D,
+                    arucos['rvecs'][i], arucos['tvecs'][i], arucos['aruco_sizes'][i] / 2)
 
 
 def detect_aruco_common(images_files, K, D, aruco_size,
