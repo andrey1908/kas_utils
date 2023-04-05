@@ -93,49 +93,17 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
             tvecs = np.array(tvecs)
             # rvecs.shape = (n, n_poses, 3)
             # tvecs.shape = (n, n_poses, 3)
-
-            marker_poses = np.tile(np.eye(4), (n, n_poses, 1, 1))
-            for i in range(n):
-                for j in range(n_poses):
-                    marker_poses[i, j, 0:3, 0:3], _ = cv2.Rodrigues(rvecs[i, j])
-                    marker_poses[i, j, 0:3, 3] = tvecs[i, j]
-            # marker_poses.shape = (n, n_poses, 4, 4)
-
-            corners_3d_in_marker_frames = list()
-            for i in range(n):
-                corners_3d_in_single_marker_frame = list()
-                aruco_size = aruco_sizes[i]
-                for sx, sy in [(-1, 1), (1, 1), (1, -1), (-1, -1)]:
-                    single_corner_3d_in_marker_frame = np.array([
-                        aruco_size / 2 * sx,
-                        aruco_size / 2 * sy,
-                        0, 1]).reshape(4, 1)
-                    corners_3d_in_single_marker_frame.append(single_corner_3d_in_marker_frame)
-                corners_3d_in_single_marker_frame = np.array(corners_3d_in_single_marker_frame)
-                corners_3d_in_marker_frames.append(corners_3d_in_single_marker_frame)
-            corners_3d_in_marker_frames = np.array(corners_3d_in_marker_frames)
-            # corners_3d_in_marker_frames.shape = (n, 4, 4, 1)
-
-            corners_3d_in_marker_frames = \
-                np.expand_dims(corners_3d_in_marker_frames.swapaxes(0, 1), axis=2)
-            # corners_3d_in_marker_frames.shape = (4, n, 1, 4, 1)
-
-            corners_3d = np.matmul(marker_poses, corners_3d_in_marker_frames)
-            corners_3d = corners_3d[:, :, :, 0:3, 0].transpose(1, 2, 0, 3)
-            # corners_3d.shape = (n, n_poses, 4, 3)
         else:
             n_poses = 0
             aruco_sizes = None
             rvecs = None
             tvecs = None
-            corners_3d = None
     else:
         corners = np.empty((0, 1, 4, 2))
         ids = np.empty((0, 1))
         aruco_sizes = np.empty((0,))
         rvecs = np.empty((0, n_poses, 3))
         tvecs = np.empty((0, n_poses, 3))
-        corners_3d = np.empty((0, n_poses, 4, 3))
 
     if n_rejected != 0:
         rejected = np.array(rejected)
@@ -149,13 +117,58 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
     # aruco_sizes.shape = (n,)
     # rvecs.shape = (n, n_poses, 3)
     # tvecs.shape = (n, n_poses, 3)
-    # corners_3d.shape = (n, n_poses, 4, 3)
     return {
         'corners': corners, 'ids': ids, 'n': n,
         'rejected': rejected, 'n_rejected': n_rejected,
         'aruco_sizes': aruco_sizes,
-        'rvecs': rvecs, 'tvecs': tvecs, 'n_poses': n_poses,
-        'corners_3d': corners_3d}
+        'rvecs': rvecs, 'tvecs': tvecs, 'n_poses': n_poses}
+
+
+def get_corners_3d(arucos):
+    if any(arucos[item] is None for item in ('aruco_sizes', 'rvecs', 'tvecs')):
+        return None
+
+    n = arucos['n']
+    aruco_sizes = arucos['aruco_sizes']
+    rvecs = arucos['rvecs']
+    tvecs = arucos['tvecs']
+    n_poses = arucos['n_poses']
+
+    if n != 0:
+        marker_poses = np.tile(np.eye(4), (n, n_poses, 1, 1))
+        for i in range(n):
+            for j in range(n_poses):
+                marker_poses[i, j, 0:3, 0:3], _ = cv2.Rodrigues(rvecs[i, j])
+                marker_poses[i, j, 0:3, 3] = tvecs[i, j]
+        # marker_poses.shape = (n, n_poses, 4, 4)
+
+        corners_3d_in_marker_frames = list()
+        for i in range(n):
+            corners_3d_in_single_marker_frame = list()
+            aruco_size = aruco_sizes[i]
+            for sx, sy in [(-1, 1), (1, 1), (1, -1), (-1, -1)]:
+                single_corner_3d_in_marker_frame = np.array([
+                    aruco_size / 2 * sx,
+                    aruco_size / 2 * sy,
+                    0, 1]).reshape(4, 1)
+                corners_3d_in_single_marker_frame.append(single_corner_3d_in_marker_frame)
+            corners_3d_in_single_marker_frame = np.array(corners_3d_in_single_marker_frame)
+            corners_3d_in_marker_frames.append(corners_3d_in_single_marker_frame)
+        corners_3d_in_marker_frames = np.array(corners_3d_in_marker_frames)
+        # corners_3d_in_marker_frames.shape = (n, 4, 4, 1)
+
+        corners_3d_in_marker_frames = \
+            np.expand_dims(corners_3d_in_marker_frames.swapaxes(0, 1), axis=2)
+        # corners_3d_in_marker_frames.shape = (4, n, 1, 4, 1)
+
+        corners_3d = np.matmul(marker_poses, corners_3d_in_marker_frames)
+        corners_3d = corners_3d[:, :, :, 0:3, 0].transpose(1, 2, 0, 3)
+        # corners_3d.shape = (n, n_poses, 4, 3)
+    else:
+        corners_3d = np.empty((0, n_poses, 4, 3))
+
+    # corners_3d.shape = (n, n_poses, 4, 3)
+    return corners_3d
 
 
 def draw_aruco(image, arucos, draw_ids=False, K=None, D=None):
