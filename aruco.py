@@ -165,7 +165,7 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
     return arucos
 
 
-def get_corners_3d(arucos: ArucoList):
+def get_aruco_corners_3d(arucos: ArucoList):
     if any(getattr(arucos, attr) is None for attr in ('aruco_sizes', 'rvecs', 'tvecs')):
         return None
 
@@ -212,7 +212,7 @@ def get_corners_3d(arucos: ArucoList):
     return corners_3d
 
 
-def select_poses(arucos: ArucoList, selector):
+def select_aruco_poses(arucos: ArucoList, selector):
     n = arucos.n
     rvecs = arucos.rvecs
     tvecs = arucos.tvecs
