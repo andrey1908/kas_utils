@@ -43,6 +43,22 @@ class ArucoList:
         self.tvecs = None
 
 
+class PoseSelectors:
+    def Z_axis_up(rvecs, tvecs):
+        # rvecs.shape = (n_poses, 3)
+        # tvecs.shape = (n_poses, 3)
+        select_list = list()
+        n_poses = rvecs.shape[0]
+        for i in range(n_poses):
+            R, _ = cv2.Rodrigues(rvecs[i])
+            s = -R[:, 2][1]  # minus Y component of aruco Z axis
+            select_list.append(s)
+
+        select_list = np.array(select_list)
+        selected = select_list.argmax()
+        return selected
+
+
 def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
         aruco_dict=cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_1000),
         params=cv2.aruco.DetectorParameters_create()):
