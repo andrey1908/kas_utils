@@ -18,6 +18,30 @@ def build_parser():
     parser.add_argument('-vis-fld', '--vis-folder', type=str)
     return parser
 
+class ArucoList:
+    # self.corners.shape = (n, 1, 4, 2)
+    # self.ids.shape = (n, 1)
+    # self.rejected.shape = (n_rejected, 1, 4, 2)
+    # self.aruco_sizes.shape = (n,)
+    # self.rvecs.shape = (n, n_poses, 3)
+    # self.tvecs.shape = (n, n_poses, 3)
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.n = -1
+        self.corners = None
+        self.ids = None
+
+        self.n_rejected = -1
+        self.rejected = None
+
+        self.aruco_sizes = None
+        self.n_poses = -1
+        self.rvecs = None
+        self.tvecs = None
+
 
 def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
         aruco_dict=cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_1000),
@@ -112,28 +136,28 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
     else:
         rejected = np.empty((0, 1, 4, 2))
 
-    # corners.shape = (n, 1, 4, 2)
-    # ids.shape = (n, 1)
-    # rejected.shape = (n_rejected, 1, 4, 2)
-    # aruco_sizes.shape = (n,)
-    # rvecs.shape = (n, n_poses, 3)
-    # tvecs.shape = (n, n_poses, 3)
-    return {
-        'corners': corners, 'ids': ids, 'n': n,
-        'rejected': rejected, 'n_rejected': n_rejected,
-        'aruco_sizes': aruco_sizes,
-        'rvecs': rvecs, 'tvecs': tvecs, 'n_poses': n_poses}
+    arucos = ArucoList()
+    arucos.n = n
+    arucos.corners = corners
+    arucos.ids = ids
+    arucos.n_rejected = n_rejected
+    arucos.rejected = rejected
+    arucos.aruco_sizes = aruco_sizes
+    arucos.n_poses = n_poses
+    arucos.rvecs = rvecs
+    arucos.tvecs = tvecs
+    return arucos
 
 
-def get_corners_3d(arucos):
-    if any(arucos[item] is None for item in ('aruco_sizes', 'rvecs', 'tvecs')):
+def get_corners_3d(arucos: ArucoList):
+    if any(getattr(arucos, attr) is None for attr in ('aruco_sizes', 'rvecs', 'tvecs')):
         return None
 
-    n = arucos['n']
-    aruco_sizes = arucos['aruco_sizes']
-    rvecs = arucos['rvecs']
-    tvecs = arucos['tvecs']
-    n_poses = arucos['n_poses']
+    n = arucos.n
+    aruco_sizes = arucos.aruco_sizes
+    n_poses = arucos.n_poses
+    rvecs = arucos.rvecs
+    tvecs = arucos.tvecs
 
     if n != 0:
         marker_poses = np.tile(np.eye(4), (n, n_poses, 1, 1))
@@ -172,38 +196,41 @@ def get_corners_3d(arucos):
     return corners_3d
 
 
-def select_poses(arucos, selector):
-    n = arucos['n']
+def select_poses(arucos: ArucoList, selector):
+    n = arucos.n
+    rvecs = arucos.rvecs
+    tvecs = arucos.tvecs
     selected = list()
     for i in range(n):
-        s = selector(arucos['rvecs'][i], arucos['tvecs'][i])
+        s = selector(rvecs[i], tvecs[i])
         selected.append(s)
 
     selected = np.array(selected).reshape(n, 1, 1)
     arucos_selected = deepcopy(arucos)
-    arucos_selected['rvecs'] = np.take_along_axis(arucos['rvecs'], selected, axis=1)
-    arucos_selected['tvecs'] = np.take_along_axis(arucos['tvecs'], selected, axis=1)
-    arucos_selected['n_poses'] = 1
+    arucos_selected.rvecs = np.take_along_axis(rvecs, selected, axis=1)
+    arucos_selected.tvecs = np.take_along_axis(tvecs, selected, axis=1)
+    arucos_selected.n_poses = 1
     return arucos_selected
 
 
-def draw_aruco(image, arucos, draw_rejected_only=False, draw_ids=False, K=None, D=None):
-    if arucos['n_poses'] > 1:
+def draw_aruco(image, arucos: ArucoList, draw_rejected_only=False,
+        draw_ids=False, K=None, D=None):
+    if arucos.n_poses > 1:
         raise RuntimeError(
             f"Use select_poses() to recude number of poses to 1 "
-            f"(now it is {arucos['n_poses']})")
+            f"(now it is {arucos.n_poses})")
 
     if draw_rejected_only:
-        cv2.aruco.drawDetectedMarkers(image, arucos['rejected'])
+        cv2.aruco.drawDetectedMarkers(image, arucos.rejected)
     else:
         if draw_ids:
-            cv2.aruco.drawDetectedMarkers(image, arucos['corners'], arucos['ids'])
+            cv2.aruco.drawDetectedMarkers(image, arucos.corners, arucos.ids)
         else:
-            cv2.aruco.drawDetectedMarkers(image, arucos['corners'])
-        if all(item is not None for item in (arucos['aruco_sizes'], K, D)):
-            for i in range(arucos['n']):
+            cv2.aruco.drawDetectedMarkers(image, arucos.corners)
+        if all(item is not None for item in (arucos.aruco_sizes, K, D)):
+            for i in range(arucos.n):
                 cv2.drawFrameAxes(image, K, D,
-                    arucos['rvecs'][i], arucos['tvecs'][i], arucos['aruco_sizes'][i] / 2)
+                    arucos.rvecs[i], arucos.tvecs[i], arucos.aruco_sizes[i] / 2)
 
 
 def detect_aruco_common(images_files, K, D, aruco_size,
