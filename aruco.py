@@ -5,6 +5,7 @@ import glob
 import os
 import os.path as osp
 from pathlib import Path
+from copy import deepcopy
 
 
 def build_parser():
@@ -171,7 +172,27 @@ def get_corners_3d(arucos):
     return corners_3d
 
 
+def select_poses(arucos, selector):
+    n = arucos['n']
+    selected = list()
+    for i in range(n):
+        s = selector(arucos['rvecs'][i], arucos['tvecs'][i])
+        selected.append(s)
+
+    selected = np.array(selected).reshape(n, 1, 1)
+    arucos_selected = deepcopy(arucos)
+    arucos_selected['rvecs'] = np.take_along_axis(arucos['rvecs'], selected, axis=1)
+    arucos_selected['tvecs'] = np.take_along_axis(arucos['tvecs'], selected, axis=1)
+    arucos_selected['n_poses'] = 1
+    return arucos_selected
+
+
 def draw_aruco(image, arucos, draw_rejected_only=False, draw_ids=False, K=None, D=None):
+    if arucos['n_poses'] > 1:
+        raise RuntimeError(
+            f"Use select_poses() to recude number of poses to 1 "
+            f"(now it is {arucos['n_poses']})")
+
     if draw_rejected_only:
         cv2.aruco.drawDetectedMarkers(image, arucos['rejected'])
     else:
