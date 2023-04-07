@@ -247,6 +247,7 @@ def draw_aruco(image, arucos: ArucoList, draw_rejected_only=False,
             for i in range(arucos.n):
                 cv2.drawFrameAxes(image, K, D,
                     arucos.rvecs[i], arucos.tvecs[i], arucos.aruco_sizes[i] / 2)
+    return image
 
 
 def detect_aruco_common(images_files, K, D, aruco_size,
