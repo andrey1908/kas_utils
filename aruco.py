@@ -257,12 +257,12 @@ def select_aruco_poses(arucos: ArucoList, selector):
 
     n = arucos.n
     if n == 0:
-        arucos_selected = deepcopy(arucos)
-        arucos_selected.n_poses = 1
-        arucos_selected.rvecs = np.empty((0, 1, 3))
-        arucos_selected.tvecs = np.empty((0, 1, 3))
-        arucos_selected.reprojection_errors = np.empty((0, 1, 3))
-        return arucos_selected
+        selected_arucos = deepcopy(arucos)
+        selected_arucos.n_poses = 1
+        selected_arucos.rvecs = np.empty((0, 1, 3))
+        selected_arucos.tvecs = np.empty((0, 1, 3))
+        selected_arucos.reprojection_errors = np.empty((0, 1, 3))
+        return selected_arucos
 
     rvecs = arucos.rvecs
     tvecs = arucos.tvecs
@@ -273,13 +273,13 @@ def select_aruco_poses(arucos: ArucoList, selector):
         selected.append(s)
 
     selected = np.array(selected).reshape(n, 1, 1)
-    arucos_selected = deepcopy(arucos)
-    arucos_selected.n_poses = 1
-    arucos_selected.rvecs = np.take_along_axis(rvecs, selected, axis=1)
-    arucos_selected.tvecs = np.take_along_axis(tvecs, selected, axis=1)
-    arucos_selected.reprojection_errors = \
+    selected_arucos = deepcopy(arucos)
+    selected_arucos.n_poses = 1
+    selected_arucos.rvecs = np.take_along_axis(rvecs, selected, axis=1)
+    selected_arucos.tvecs = np.take_along_axis(tvecs, selected, axis=1)
+    selected_arucos.reprojection_errors = \
         np.take_along_axis(reprojection_errors, selected.reshape(n, 1), axis=1)
-    return arucos_selected
+    return selected_arucos
 
 
 def select_aruco_markers(arucos: ArucoList, accepter):
@@ -291,16 +291,16 @@ def select_aruco_markers(arucos: ArucoList, accepter):
         if accept:
             selected.append(i)
 
-    arucos_selected = deepcopy(arucos)
-    arucos_selected.n = len(selected)
-    arucos_selected.corners = arucos_selected.corners[selected]
-    arucos_selected.ids = arucos_selected.ids[selected]
-    if arucos_selected.n_poses > 0:
-        arucos_selected.aruco_sizes = arucos_selected.aruco_sizes[selected]
-        arucos_selected.rvecs = arucos_selected.rvecs[selected]
-        arucos_selected.tvecs = arucos_selected.tvecs[selected]
-        arucos_selected.reprojection_errors = arucos_selected.reprojection_errors[selected]
-    return arucos_selected
+    selected_arucos = deepcopy(arucos)
+    selected_arucos.n = len(selected)
+    selected_arucos.corners = selected_arucos.corners[selected]
+    selected_arucos.ids = selected_arucos.ids[selected]
+    if selected_arucos.n_poses > 0:
+        selected_arucos.aruco_sizes = selected_arucos.aruco_sizes[selected]
+        selected_arucos.rvecs = selected_arucos.rvecs[selected]
+        selected_arucos.tvecs = selected_arucos.tvecs[selected]
+        selected_arucos.reprojection_errors = selected_arucos.reprojection_errors[selected]
+    return selected_arucos
 
 
 def draw_aruco(image, arucos: ArucoList, draw_rejected_only=False,
