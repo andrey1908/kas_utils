@@ -69,11 +69,12 @@ class PoseSelectors:
         return selected
 
     def best(rvec, tvec, reprojection_error):
-        return 0
+        selected = np.argmin(reprojection_error)
+        return selected
 
     def worst(rvec, tvec, reprojection_error):
-        n_poses = rvec.shape[0]
-        return n_poses - 1
+        selected = np.argmax(reprojection_error)
+        return selected
 
 
 def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
@@ -138,7 +139,6 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
                             flags=cv2.SOLVEPNP_IPPE_SQUARE,
                             reprojectionError=np.empty(0, dtype=np.float))
                     assert len(rvec) == n_poses
-                    assert reprojection_error[0][0] <= reprojection_error[1][0]
                     rvec = np.array(rvec)
                     tvec = np.array(tvec)
                     # rvec.shape = (n_poses, 3, 1)
