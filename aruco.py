@@ -213,6 +213,13 @@ def get_aruco_corners_3d(arucos: ArucoList):
 
 def select_aruco_poses(arucos: ArucoList, selector):
     n = arucos.n
+    if n == 0:
+        arucos_selected = deepcopy(arucos)
+        arucos_selected.rvecs = np.empty((0, 1, 3))
+        arucos_selected.tvecs = np.empty((0, 1, 3))
+        arucos_selected.n_poses = 1
+        return arucos_selected
+
     rvecs = arucos.rvecs
     tvecs = arucos.tvecs
     selected = list()
