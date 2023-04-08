@@ -45,11 +45,11 @@ class ArucoList:
 
 
 class PoseSelectors:
-    def _select_by_rotation_matrix(rvecs, get_rotation_matrix_score):
+    def _select_by_rotation_matrix(rvec, get_rotation_matrix_score):
         scores = list()
-        n_poses = rvecs.shape[0]
+        n_poses = rvec.shape[0]
         for i in range(n_poses):
-            R, _ = cv2.Rodrigues(rvecs[i])
+            R, _ = cv2.Rodrigues(rvec[i])
             score = get_rotation_matrix_score(R)
             scores.append(score)
 
@@ -57,22 +57,22 @@ class PoseSelectors:
         selected = scores.argmax()
         return selected
 
-    def Z_axis_up(rvecs, tvecs, reprojection_errors):
-        # rvecs.shape = (n_poses, 3)
-        # tvecs.shape = (n_poses, 3)
-        # reprojection_errors.shape = (n_poses,)
+    def Z_axis_up(rvec, tvec, reprojection_error):
+        # rvec.shape = (n_poses, 3)
+        # tvec.shape = (n_poses, 3)
+        # reprojection_error.shape = (n_poses,)
         def get_rotation_matrix_score(R):
             score = -R[:, 2][1]  # minus Y component of aruco Z axis
             return score
         selected = PoseSelectors._select_by_rotation_matrix(
-            rvecs, get_rotation_matrix_score)
+            rvec, get_rotation_matrix_score)
         return selected
 
-    def best(rvecs, tvecs, reprojection_errors):
+    def best(rvec, tvec, reprojection_error):
         return 0
 
-    def worst(rvecs, tvecs, reprojection_errors):
-        n_poses = rvecs.shape[0]
+    def worst(rvec, tvec, reprojection_error):
+        n_poses = rvec.shape[0]
         return n_poses - 1
 
 
