@@ -43,19 +43,34 @@ class ArucoList:
 
 
 class PoseSelectors:
-    def Z_axis_up(rvecs, tvecs):
-        # rvecs.shape = (n_poses, 3)
-        # tvecs.shape = (n_poses, 3)
-        select_list = list()
+    def _select_by_rotation_matrix(rvecs, get_rotation_matrix_score):
+        scores = list()
         n_poses = rvecs.shape[0]
         for i in range(n_poses):
             R, _ = cv2.Rodrigues(rvecs[i])
-            s = -R[:, 2][1]  # minus Y component of aruco Z axis
-            select_list.append(s)
+            score = get_rotation_matrix_score(R)
+            scores.append(score)
 
-        select_list = np.array(select_list)
-        selected = select_list.argmax()
+        scores = np.array(scores)
+        selected = scores.argmax()
         return selected
+
+    def Z_axis_up(rvecs, tvecs):
+        # rvecs.shape = (n_poses, 3)
+        # tvecs.shape = (n_poses, 3)
+        def get_rotation_matrix_score(R):
+            score = -R[:, 2][1]  # minus Y component of aruco Z axis
+            return score
+        selected = PoseSelectors._select_by_rotation_matrix(
+            rvecs, get_rotation_matrix_score)
+        return selected
+
+    def best(rvecs, tvecs):
+        return 0
+
+    def worst(rvecs, tvecs):
+        n_poses = rvecs.shape[0]
+        return n_poses - 1
 
 
 def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
