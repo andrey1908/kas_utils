@@ -45,6 +45,10 @@ class ArucoList:
 
 
 class PoseSelectors:
+    # rvec.shape = (n_poses, 3)
+    # tvec.shape = (n_poses, 3)
+    # reprojection_error.shape = (n_poses,)
+
     def _select_by_rotation_matrix(rvec, get_rotation_matrix_score):
         scores = list()
         n_poses = rvec.shape[0]
@@ -58,11 +62,16 @@ class PoseSelectors:
         return selected
 
     def Z_axis_up(rvec, tvec, reprojection_error):
-        # rvec.shape = (n_poses, 3)
-        # tvec.shape = (n_poses, 3)
-        # reprojection_error.shape = (n_poses,)
         def get_rotation_matrix_score(R):
             score = -R[:, 2][1]  # minus Y component of aruco Z axis
+            return score
+        selected = PoseSelectors._select_by_rotation_matrix(
+            rvec, get_rotation_matrix_score)
+        return selected
+
+    def Z_axis_back(rvec, tvec, reprojection_error):
+        def get_rotation_matrix_score(R):
+            score = -R[:, 2][2]  # minus Z component of aruco Z axis
             return score
         selected = PoseSelectors._select_by_rotation_matrix(
             rvec, get_rotation_matrix_score)
