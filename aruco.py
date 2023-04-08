@@ -94,23 +94,33 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
     n = len(corners)
     n_rejected = len(rejected)
 
-    if not use_generic:
-        n_poses = 1
-    else:
-        n_poses = 2
-
     if n != 0:
         corners = np.array(corners)
         ids = np.array(ids)
         # corners.shape = (n, 1, 4, 2)
         # ids.shape = (n, 1)
 
+        # sort by id
         ind = np.argsort(ids, axis=0)
         ids = np.take_along_axis(ids, ind, axis=0)
         corners = np.take_along_axis(corners, np.expand_dims(ind, axis=(-1, -2)), axis=0)
+    else:
+        corners = np.empty((0, 1, 4, 2))
+        ids = np.empty((0, 1))
 
-        # estimate 3d poses
-        if all(item is not None for item in (K, D, aruco_sizes)):
+    if n_rejected != 0:
+        rejected = np.array(rejected)
+        # rejected.shape = (n_rejected, 1, 4, 2)
+    else:
+        rejected = np.empty((0, 1, 4, 2))
+
+    estimate_3d_poses = all(item is not None for item in (K, D, aruco_sizes))
+    if not use_generic:
+        n_poses = 1
+    else:
+        n_poses = 2
+    if estimate_3d_poses:
+        if n != 0:
             if isinstance(aruco_sizes, (list, tuple)):
                 aruco_sizes = np.array(aruco_sizes)
             elif not isinstance(aruco_sizes, np.ndarray):
@@ -170,24 +180,16 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
             # tvecs.shape = (n, n_poses, 3)
             # reprojection_errors.shape = (n, n_poses)
         else:
-            n_poses = 0
-            aruco_sizes = None
-            rvecs = None
-            tvecs = None
-            reprojection_errors = None
+            aruco_sizes = np.empty((0,))
+            rvecs = np.empty((0, n_poses, 3))
+            tvecs = np.empty((0, n_poses, 3))
+            reprojection_errors = np.empty((0, n_poses))
     else:
-        corners = np.empty((0, 1, 4, 2))
-        ids = np.empty((0, 1))
-        aruco_sizes = np.empty((0,))
-        rvecs = np.empty((0, n_poses, 3))
-        tvecs = np.empty((0, n_poses, 3))
-        reprojection_errors = np.empty((0, n_poses))
-
-    if n_rejected != 0:
-        rejected = np.array(rejected)
-        # rejected.shape = (n_rejected, 1, 4, 2)
-    else:
-        rejected = np.empty((0, 1, 4, 2))
+        n_poses = -1
+        aruco_sizes = None
+        rvecs = None
+        tvecs = None
+        reprojection_errors = None
 
     arucos = ArucoList()
     arucos.n = n
@@ -251,6 +253,8 @@ def get_aruco_corners_3d(arucos: ArucoList):
 
 
 def select_aruco_poses(arucos: ArucoList, selector):
+    assert arucos.n_poses > 0
+
     n = arucos.n
     if n == 0:
         arucos_selected = deepcopy(arucos)
@@ -275,6 +279,27 @@ def select_aruco_poses(arucos: ArucoList, selector):
     arucos_selected.tvecs = np.take_along_axis(tvecs, selected, axis=1)
     arucos_selected.reprojection_errors = \
         np.take_along_axis(reprojection_errors, selected.reshape(n, 1), axis=1)
+    return arucos_selected
+
+
+def select_aruco_markers(arucos: ArucoList, accepter):
+    n = arucos.n
+    ids = arucos.ids
+    selected = list()
+    for i in range(n):
+        accept = accepter(ids[i])
+        if accept:
+            selected.append(i)
+
+    arucos_selected = deepcopy(arucos)
+    arucos_selected.n = len(selected)
+    arucos_selected.corners = arucos_selected.corners[selected]
+    arucos_selected.ids = arucos_selected.ids[selected]
+    if arucos_selected.n_poses > 0:
+        arucos_selected.aruco_sizes = arucos_selected.aruco_sizes[selected]
+        arucos_selected.rvecs = arucos_selected.rvecs[selected]
+        arucos_selected.tvecs = arucos_selected.tvecs[selected]
+        arucos_selected.reprojection_errors = arucos_selected.reprojection_errors[selected]
     return arucos_selected
 
 
