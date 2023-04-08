@@ -14,8 +14,7 @@ def build_parser():
     parser.add_argument('-ext', '--images-extension', type=str, default='jpg')
     parser.add_argument('-calib', '--camera-calibration', required=True, type=str)
     parser.add_argument('-size', '--aruco-size', required=True, type=float)
-    parser.add_argument('-out', '--out-file', required=True, type=str)
-    parser.add_argument('-vis-fld', '--vis-folder', type=str)
+    parser.add_argument('-out-fld', '--out-folder', required=True, type=str)
     return parser
 
 class ArucoList:
@@ -250,39 +249,23 @@ def draw_aruco(image, arucos: ArucoList, draw_rejected_only=False,
     return image
 
 
-def detect_aruco_common(images_files, K, D, aruco_size,
-        out_file, vis_folder=None):
-    if len(osp.dirname(out_file)) != 0:
-        os.makedirs(osp.dirname(out_file), exist_ok=True)
-    if vis_folder is not None:
-        os.makedirs(vis_folder, exist_ok=True)
+def detect_aruco_common(images_files, K, D, aruco_size, out_folder):
+    os.makedirs(out_folder, exist_ok=True)
 
-    aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_1000)
-    aruco_params = cv2.aruco.DetectorParameters_create()
-    # aruco_params.adaptiveThreshConstant = 14
-    corners_3d_all = list()
+    aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_1000)
+    params = cv2.aruco.DetectorParameters_create()
     for image_file in images_files:
         image = cv2.imread(image_file)
-        arucos = detect_aruco(image, K, D, aruco_size,
-            aruco_dict, aruco_params)
-        corners_3d_all.append(arucos['corners_3d'])
+        arucos = detect_aruco(image, K=K, D=D, aruco_sizes=aruco_size,
+            use_generic=False, aruco_dict=aruco_dict, params=params)
 
-        n = arucos['n']
+        n = arucos.n
         print(f"{image_file} : detected {n} marker{'' if n == 1 else 's'}")
 
-        if vis_folder is not None:
-            corners = arucos['corners']
-            rvecs = arucos['rvecs']
-            tvecs = arucos['tvecs']
-            vis_image = image.copy()
-            draw_aruco(vis_image, corners, K=K, D=D,
-                rvecs=rvecs, tvecs=tvecs, frames_sizes=aruco_size / 2)
-            vis_image_file = osp.join(
-                vis_folder, Path(image_file).stem + '_vis.jpg')
-            cv2.imwrite(vis_image_file, vis_image)
-
-    corners_3d_all = np.vstack(corners_3d_all)
-    np.save(out_file, corners_3d_all)
+        draw = draw_aruco(image.copy(), arucos, K=K, D=D)
+        draw_image_file = osp.join(
+            out_folder, Path(image_file).stem + '_vis.jpg')
+        cv2.imwrite(draw_image_file, draw)
 
 
 if __name__ == "__main__":
@@ -297,5 +280,4 @@ if __name__ == "__main__":
     K = camera_calibration['K']
     D = camera_calibration['D']
 
-    detect_aruco_common(images_files, K, D, args.aruco_size,
-        args.out_file, vis_folder=args.vis_folder)
+    detect_aruco_common(images_files, K, D, args.aruco_size, args.out_folder)
