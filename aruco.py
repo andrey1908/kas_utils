@@ -24,6 +24,7 @@ class ArucoList:
     # self.aruco_sizes.shape = (n,)
     # self.rvecs.shape = (n, n_poses, 3)
     # self.tvecs.shape = (n, n_poses, 3)
+    # self.reprojection_errors = (n, n_poses)
 
     def __init__(self):
         self.reset()
@@ -40,6 +41,7 @@ class ArucoList:
         self.n_poses = -1
         self.rvecs = None
         self.tvecs = None
+        self.reprojection_errors = None
 
 
 class PoseSelectors:
@@ -111,6 +113,7 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
 
             rvecs = list()
             tvecs = list()
+            reprojection_errors = list()
             for i in range(n):
                 aruco_size = aruco_sizes[i]
                 obj = np.array([
@@ -124,41 +127,51 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
                             flags=cv2.SOLVEPNP_IPPE_SQUARE)
                     rvec = rvec.swapaxes(0, 1)
                     tvec = tvec.swapaxes(0, 1)
-                    # rvec.shape = (1, 3)
-                    # tvec.shape = (1, 3)
+                    reprojection_error = np.array([-1])  # undefined
+                    # rvec.shape = (n_poses, 3)
+                    # tvec.shape = (n_poses, 3)
+                    # reprojection_error.shape = (n_poses,)
                 else:
-                    retval, rvec, tvec, reprojectionError = \
+                    retval, rvec, tvec, reprojection_error = \
                         cv2.solvePnPGeneric(obj, corners[i], K, D,
                             flags=cv2.SOLVEPNP_IPPE_SQUARE,
                             reprojectionError=np.empty(0, dtype=np.float))
                     assert len(rvec) == n_poses
-                    assert reprojectionError[0][0] <= reprojectionError[1][0]
+                    assert reprojection_error[0][0] <= reprojection_error[1][0]
                     rvec = np.array(rvec)
                     tvec = np.array(tvec)
-                    # rvec.shape = (2, 3, 1)
-                    # tvec.shape = (2, 3, 1)
+                    # rvec.shape = (n_poses, 3, 1)
+                    # tvec.shape = (n_poses, 3, 1)
+                    # reprojection_error.shape = (n_poses, 1)
 
                     rvec = rvec.squeeze()
                     tvec = tvec.squeeze()
-                    # rvec.shape = (2, 3)
-                    # tvec.shape = (2, 3)
+                    reprojection_error = reprojection_error.squeeze()
+                    # rvec.shape = (n_poses, 3)
+                    # tvec.shape = (n_poses, 3)
+                    # reprojection_error.shape = (n_poses,)
                 rvecs.append(rvec)
                 tvecs.append(tvec)
+                reprojection_errors.append(reprojection_error)
             rvecs = np.array(rvecs)
             tvecs = np.array(tvecs)
+            reprojection_errors = np.array(reprojection_errors)
             # rvecs.shape = (n, n_poses, 3)
             # tvecs.shape = (n, n_poses, 3)
+            # reprojection_errors.shape = (n, n_poses)
         else:
             n_poses = 0
             aruco_sizes = None
             rvecs = None
             tvecs = None
+            reprojection_errors = None
     else:
         corners = np.empty((0, 1, 4, 2))
         ids = np.empty((0, 1))
         aruco_sizes = np.empty((0,))
         rvecs = np.empty((0, n_poses, 3))
         tvecs = np.empty((0, n_poses, 3))
+        reprojection_errors = np.empty((0, n_poses))
 
     if n_rejected != 0:
         rejected = np.array(rejected)
@@ -176,6 +189,7 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
     arucos.n_poses = n_poses
     arucos.rvecs = rvecs
     arucos.tvecs = tvecs
+    arucos.reprojection_errors = reprojection_errors
     return arucos
 
 
@@ -230,13 +244,15 @@ def select_aruco_poses(arucos: ArucoList, selector):
     n = arucos.n
     if n == 0:
         arucos_selected = deepcopy(arucos)
+        arucos_selected.n_poses = 1
         arucos_selected.rvecs = np.empty((0, 1, 3))
         arucos_selected.tvecs = np.empty((0, 1, 3))
-        arucos_selected.n_poses = 1
+        arucos_selected.reprojection_errors = np.empty((0, 1, 3))
         return arucos_selected
 
     rvecs = arucos.rvecs
     tvecs = arucos.tvecs
+    reprojection_errors = arucos.reprojection_errors
     selected = list()
     for i in range(n):
         s = selector(rvecs[i], tvecs[i])
@@ -244,9 +260,11 @@ def select_aruco_poses(arucos: ArucoList, selector):
 
     selected = np.array(selected).reshape(n, 1, 1)
     arucos_selected = deepcopy(arucos)
+    arucos_selected.n_poses = 1
     arucos_selected.rvecs = np.take_along_axis(rvecs, selected, axis=1)
     arucos_selected.tvecs = np.take_along_axis(tvecs, selected, axis=1)
-    arucos_selected.n_poses = 1
+    arucos_selected.reprojection_errors = \
+        np.take_along_axis(reprojection_errors, selected.reshape(n, 1), axis=1)
     return arucos_selected
 
 
