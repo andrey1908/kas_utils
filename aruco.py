@@ -6,6 +6,10 @@ import os
 import os.path as osp
 from pathlib import Path
 from copy import deepcopy
+from packaging import version
+
+
+assert version.parse(cv2.__version__) >= version.parse("4.5.2")
 
 
 def build_parser():
