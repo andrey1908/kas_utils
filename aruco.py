@@ -165,7 +165,7 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False, sub
                     retval, rvec, tvec, reprojection_error = \
                         cv2.solvePnPGeneric(obj, corners[i], K, D,
                             flags=cv2.SOLVEPNP_IPPE_SQUARE,
-                            reprojectionError=np.empty(0, dtype=np.float))
+                            reprojectionError=np.empty(0, dtype=float))
                     assert len(rvec) == n_poses
                     rvec = np.array(rvec)
                     tvec = np.array(tvec)
