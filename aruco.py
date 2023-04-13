@@ -90,9 +90,14 @@ class PoseSelectors:
         return selected
 
 
-def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
+def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False, subtract=0,
         aruco_dict=cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_1000),
         params=cv2.aruco.DetectorParameters_create()):
+    if subtract != 0:
+        sub = np.full(image.shape, subtract, dtype=image.dtype)
+        sub[image < subtract] = image[image < subtract]
+        image = image - sub
+
     corners, ids, rejected = \
         cv2.aruco.detectMarkers(image, aruco_dict, parameters=params)
     n = len(corners)
