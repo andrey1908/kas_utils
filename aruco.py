@@ -7,6 +7,7 @@ import os.path as osp
 from pathlib import Path
 from copy import deepcopy
 from packaging import version
+from shapely.geometry import Polygon
 
 
 assert version.parse(cv2.__version__) >= version.parse("4.5.2")
@@ -90,16 +91,73 @@ class PoseSelectors:
         return selected
 
 
-def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False, subtract=0,
+class RetryRejectedParameters:
+    def __init__(self):
+        self.max_rejected_area = 500
+        self.border_rate = 1
+        self.subtract = 0
+        self.scale = 3
+        self.max_area_difference = 30
+        self.add_retried_areas_to_rejected = False
+
+
+def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
+        retry_rejected=False, retry_rejected_params=RetryRejectedParameters(),
         aruco_dict=cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_1000),
         params=cv2.aruco.DetectorParameters_create()):
-    if subtract != 0:
-        sub = np.full(image.shape, subtract, dtype=image.dtype)
-        sub[image < subtract] = image[image < subtract]
-        image = image - sub
-
     corners, ids, rejected = \
         cv2.aruco.detectMarkers(image, aruco_dict, parameters=params)
+
+    if retry_rejected:
+        retried_areas = list()
+        image_w, image_h = image.shape[1], image.shape[0]
+        max_rejected_area = retry_rejected_params.max_rejected_area
+        border_rate = retry_rejected_params.border_rate
+        subtract = retry_rejected_params.subtract
+        scale = retry_rejected_params.scale
+        max_area_difference = retry_rejected_params.max_area_difference
+        add_retried_areas_to_rejected = retry_rejected_params.add_retried_areas_to_rejected
+        for rej in rejected:
+            rej_polygon = Polygon(rej[0])
+            if rej_polygon.area > max_rejected_area:
+                continue
+            min_x, min_y = rej.min(axis=(0, 1))
+            max_x, max_y = rej.max(axis=(0, 1))
+            rej_w = max_x - min_x
+            rej_h = max_y - min_y
+            from_x = max(int(min_x - rej_w * border_rate), 0)
+            to_x = min(int(max_x + rej_w * border_rate), image_w)
+            from_y = max(int(min_y - rej_h * border_rate), 0)
+            to_y = min(int(max_y + rej_h * border_rate), image_h)
+            sub_image = image[from_y:to_y, from_x:to_x]
+            if add_retried_areas_to_rejected:
+                retried_areas.append(np.array([[[from_x, from_y], [from_x, to_y],
+                    [to_x, to_y], [to_x, from_y]]], dtype=rej.dtype))
+            if subtract != 0:
+                subtract_array = np.full(sub_image.shape, subtract, dtype=sub_image.dtype)
+                subtract_array[sub_image < subtract] = sub_image[sub_image < subtract]
+                sub_image = sub_image - subtract_array
+            sub_w, sub_h = sub_image.shape[1], sub_image.shape[0]
+            sub_image = cv2.resize(sub_image, (sub_w * scale, sub_h * scale), cv2.INTER_NEAREST)
+            sub_corners, sub_ids, sub_rejected = \
+                cv2.aruco.detectMarkers(sub_image, aruco_dict, parameters=params)
+            for i in range(len(sub_corners)):
+                sub_corns = sub_corners[i]
+                sub_corns /= scale
+                sub_corns += np.array([from_x, from_y])
+                sub_id = sub_ids[i, 0]
+
+                sub_corns_polygon = Polygon(sub_corns[0])
+                intersetion = rej_polygon.intersection(sub_corns_polygon)
+                diff_1 = abs(rej_polygon.area - intersetion.area)
+                diff_2 = abs(sub_corns_polygon.area - intersetion.area)
+                if max(diff_1, diff_2) > max_area_difference:
+                    continue
+
+                corners.append(sub_corns)
+                ids = np.vstack((ids, np.array([[sub_id]])))
+        rejected.extend(retried_areas)
+
     n = len(corners)
     n_rejected = len(rejected)
 
