@@ -107,6 +107,8 @@ def detect_aruco(image, K=None, D=None, aruco_sizes=None, use_generic=False,
         params=cv2.aruco.DetectorParameters_create()):
     corners, ids, rejected = \
         cv2.aruco.detectMarkers(image, aruco_dict, parameters=params)
+    corners = list(corners)
+    rejected = list(rejected)
 
     if retry_rejected:
         retried_areas = list()
