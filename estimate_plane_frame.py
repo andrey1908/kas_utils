@@ -27,6 +27,20 @@ def project_to_XY(points, T):
     return projected_points
 
 
+def intersection_with_XY(points, T):
+    assert points.shape[-1] == 3
+    orig_shape = points.shape
+    points = points.reshape(-1, 3)
+
+    T_inv = np.linalg.inv(T)
+    k = -T_inv[2, 3] / np.dot(points, T_inv[2, :3])
+    k = np.expand_dims(k, axis=-1)
+    points = k * points
+
+    points = points.reshape(orig_shape)
+    return points
+
+
 def project_to_plane(p0, plane):
     x0 = p0[0]
     y0 = p0[1]
