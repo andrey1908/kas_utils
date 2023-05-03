@@ -11,13 +11,11 @@ def segment_by_color(image, min_color, max_color, \
     if refine_mask:
         polygons, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         refined_mask = np.zeros(mask.shape, dtype=mask.dtype)
-        num = 0
-        out_polygons = list()
+        accepted_polygons = list()
         for polygon in polygons:
             if min_polygon_length <= len(polygon) <= max_polygon_length:
                 cv2.fillPoly(refined_mask, [polygon], 1)
-                out_polygons.append(polygon)
-                num += 1
-        return refined_mask, num, out_polygons
+                accepted_polygons.append(polygon)
+        return refined_mask, accepted_polygons
     else:
         return mask
