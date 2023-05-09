@@ -4,11 +4,11 @@ import cv2
 
 def segment_by_color(image, min_color, max_color, \
         x_range=slice(0, None), y_range=slice(0, None),
-        refine_mask=False, min_polygon_length=100, max_polygon_length=1000):
+        refine=False, min_polygon_length=100, max_polygon_length=1000):
     mask_full = cv2.inRange(image, min_color, max_color)
     mask = np.zeros(mask_full.shape, dtype=mask_full.dtype)
     mask[y_range, x_range] = mask_full[y_range, x_range]
-    if refine_mask:
+    if refine:
         polygons, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         refined_mask = np.zeros(mask.shape, dtype=mask.dtype)
         accepted_polygons = list()
