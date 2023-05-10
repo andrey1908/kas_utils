@@ -8,6 +8,12 @@ class PlaneFrame():
         self.invT = None
 
     @classmethod
+    def from_plane_frame(cls, T):
+        obj = cls()
+        obj.set(T)
+        return obj
+
+    @classmethod
     def from_points(cls, points):
         obj = cls()
         obj.set_from_points(points)
