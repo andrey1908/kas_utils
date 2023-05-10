@@ -1,4 +1,3 @@
-from re import T
 import numpy as np
 
 
@@ -8,7 +7,7 @@ class PlaneFrame():
         self.invT = None
 
     @classmethod
-    def from_plane_frame(cls, T):
+    def from_plane_frame_pose(cls, T):
         obj = cls()
         obj.set(T)
         return obj
