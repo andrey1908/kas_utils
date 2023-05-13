@@ -30,7 +30,8 @@ def select_roi(image, full_by_default=False, window_name="select roi"):
 
 def segment_by_color(image, min_color, max_color, \
         x_range=slice(0, None), y_range=slice(0, None),
-        refine=False, min_polygon_length=100, max_polygon_length=1000):
+        refine=False, min_polygon_length=100, max_polygon_length=1000,
+        return_orig_mask=False):
     mask_full = cv2.inRange(image, min_color, max_color)
     mask = np.zeros(mask_full.shape, dtype=mask_full.dtype)
     mask[y_range, x_range] = mask_full[y_range, x_range]
@@ -42,7 +43,10 @@ def segment_by_color(image, min_color, max_color, \
             if min_polygon_length <= len(polygon) <= max_polygon_length:
                 cv2.fillPoly(refined_mask, [polygon], 1)
                 accepted_polygons.append(polygon)
-        return refined_mask, accepted_polygons
+        if return_orig_mask:
+            return (refined_mask, mask), accepted_polygons
+        else:
+            return refined_mask, accepted_polygons
     else:
         return mask
 
