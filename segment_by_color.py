@@ -108,7 +108,8 @@ def show_h(image):
 
 
 def get_sv(hsv):
-    _, s, v = np.split(hsv, 3, axis=-1)
+    s = hsv[:, :, 1]
+    v = hsv[:, :, 2]
     sv = s.astype(np.float32) * v.astype(np.float32) / 255
     sv = sv.astype(np.uint8)
     return sv
@@ -123,7 +124,8 @@ def get_mask_for_h(hsv,
         use_sv_limits = False
 
     if not use_sv_limits:
-        _, s, v = np.split(hsv, 3, axis=-1)
+        s = hsv[:, :, 1]
+        v = hsv[:, :, 2]
         mask = (s >= min_s) & (s <= max_s) & (v >= min_v) & (v <= max_v)
     else:
         sv = get_sv(hsv)
