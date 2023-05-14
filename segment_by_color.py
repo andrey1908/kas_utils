@@ -41,7 +41,7 @@ def segment_by_color(image, min_color, max_color, \
         accepted_polygons = list()
         for polygon in polygons:
             if min_polygon_length <= len(polygon) <= max_polygon_length:
-                cv2.fillPoly(refined_mask, [polygon], 1)
+                cv2.fillPoly(refined_mask, [polygon], 255)
                 accepted_polygons.append(polygon)
         if return_orig_mask:
             return (refined_mask, mask), accepted_polygons
