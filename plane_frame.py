@@ -33,44 +33,53 @@ class PlaneFrame():
     def plane2origin(self):
         return self.invT
 
-    def distance_from_origin_to_plane(self):
+    def distance_from_origin_to_plane(self, shift=0):
         assert self.is_set()
-        dist = -self.invT[2, 3]
+        dist = -self.invT[2, 3] + shift
         return dist
 
-    def distance_to_plane(self, points):
+    def distance_from_origin(self, points):
         assert self.is_set()
-        dist = self.distance_from_origin_to_plane() - np.dot(points, self.T[:3, 2])
+        dist = np.dot(points, self.T[:3, 2])
         return dist
 
-    def to_plane(self, data_in_origin, is_poses=False):
+    def distance_to_plane(self, points, shift=0):
+        assert self.is_set()
+        dist = self.distance_from_origin_to_plane(shift) - self.distance_from_origin(points)
+        return dist
+
+    def to_plane(self, data_in_origin, is_poses=False, shift=0):
         assert self.is_set()
         data_in_origin, is_padded = \
             self._prepare_data_for_processing(data_in_origin, is_poses)
-        data_in_plane = np.matmul(self.invT, data_in_origin)
+        shifted_invT = self.invT.copy()
+        shifted_invT[2, 3] -= shift
+        data_in_plane = np.matmul(shifted_invT, data_in_origin)
         data_in_plane = \
             self._prepare_data_for_return(data_in_plane, is_poses, is_padded)
         return data_in_plane
 
-    def to_origin(self, data_in_plane, is_poses=False):
+    def to_origin(self, data_in_plane, is_poses=False, shift=0):
         assert self.is_set()
         data_in_plane, is_padded = \
             self._prepare_data_for_processing(data_in_plane, is_poses)
-        data_in_origin = np.matmul(self.T, data_in_plane)
+        shifted_T = self.T.copy()
+        shifted_T[:3, 3] += self.T[:3, 2] * shift
+        data_in_origin = np.matmul(shifted_T, data_in_plane)
         data_in_origin = \
             self._prepare_data_for_return(data_in_origin, is_poses, is_padded)
         return data_in_origin
 
-    def project_points(self, points):
+    def project_points(self, points, shift=0):
+        assert self.is_set()
         points_in_plane = self.to_plane(points)
-        points_in_plane[..., 2] = 0
+        points_in_plane[..., 2] = shift
         projected_points = self.to_origin(points_in_plane)
         return projected_points
 
-    def intersection_with_plane(self, points):
+    def intersection_with_plane(self, points, shift=0):
         assert self.is_set()
-        dist_to_plane = self.distance_from_origin_to_plane()
-        k = dist_to_plane / (dist_to_plane - self.distance_to_plane(points))
+        k = self.distance_from_origin_to_plane(shift) / self.distance_from_origin(points)
         k = np.expand_dims(k, axis=-1)
         points = k * points
         return points
