@@ -45,7 +45,8 @@ class PlaneFrame():
 
     def distance_to_plane(self, points, shift=0):
         assert self.is_set()
-        dist = self.distance_from_origin_to_plane(shift) - self.distance_from_origin(points)
+        dist = self.distance_from_origin_to_plane(shift=shift) - \
+            self.distance_from_origin(points)
         return dist
 
     def to_plane(self, data_in_origin, is_poses=False, shift=0):
@@ -80,7 +81,8 @@ class PlaneFrame():
 
     def intersection_with_plane(self, points, shift=0):
         assert self.is_set()
-        k = self.distance_from_origin_to_plane(shift) / self.distance_from_origin(points)
+        k = self.distance_from_origin_to_plane(shift=shift) / \
+            self.distance_from_origin(points)
         k = np.expand_dims(k, axis=-1)
         points = k * points
         return points
