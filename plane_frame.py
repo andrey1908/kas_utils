@@ -72,10 +72,11 @@ class PlaneFrame():
 
     def project_points(self, points, shift=0):
         assert self.is_set()
-        points_in_plane = self.to_plane(points)
-        points_in_plane[..., 2] = shift
-        projected_points = self.to_origin(points_in_plane)
-        return projected_points
+        dist = self.distance_to_plane(points, shift=shift)
+        dist = np.expand_dims(dist, axis=-1)
+        direction = self.T[:3, 2]
+        points = points + direction * dist
+        return points
 
     def intersection_with_plane(self, points, shift=0):
         assert self.is_set()
