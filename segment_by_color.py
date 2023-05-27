@@ -3,28 +3,22 @@ import cv2
 import matplotlib.pyplot as plt
 
 
-def segment_by_color(image, min_color, max_color, \
-        x_range=slice(0, None), y_range=slice(0, None),
-        refine=False, min_polygon_length=100, max_polygon_length=1000,
-        return_orig_mask=False):
-    mask_full = cv2.inRange(image, min_color, max_color)
-    mask = np.zeros(mask_full.shape, dtype=mask_full.dtype)
-    mask[y_range, x_range] = mask_full[y_range, x_range]
-    if refine:
-        polygons, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        refined_mask = np.zeros(mask.shape, dtype=mask.dtype)
-        accepted_polygons = list()
-        for polygon in polygons:
-            if min_polygon_length <= len(polygon) <= max_polygon_length:
-                cv2.fillPoly(refined_mask, [polygon], 255)
-                accepted_polygons.append(polygon)
-        if return_orig_mask:
-            return (refined_mask, mask), accepted_polygons
-        else:
-            return refined_mask, accepted_polygons
-    else:
-        return mask
-    
+def get_mask_in_roi(mask, x_range, y_range):
+    mask_in_roi = np.zeros_like(mask)
+    mask_in_roi[y_range, x_range] = mask[y_range, x_range]
+    return mask_in_roi
+
+
+def refine_mask_by_polygons(mask, min_polygon_length=100, max_polygon_length=1000):
+    polygons, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    refined_mask = np.zeros_like(mask)
+    accepted_polygons = list()
+    for polygon in polygons:
+        if min_polygon_length <= len(polygon) <= max_polygon_length:
+            cv2.fillPoly(refined_mask, [polygon], 255)
+            accepted_polygons.append(polygon)
+    return refined_mask, accepted_polygons
+
 
 #############
 
@@ -63,7 +57,7 @@ def get_and_apply_mask(image, select_image_roi=True,
         x_range, y_range = slice(0, None), slice(0, None)
     image = image[y_range, x_range].copy()
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV_FULL)
-    mask = segment_by_color(hsv, (min_h, min_s, min_v), (max_h, max_s, max_v))
+    mask = cv2.inRange(hsv, (min_h, min_s, min_v), (max_h, max_s, max_v))
     mask = mask.astype(bool)
     if not inverse_mask:
         background_mask = np.logical_not(mask)
