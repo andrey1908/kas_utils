@@ -58,11 +58,10 @@ def get_and_apply_mask(image, select_image_roi=True,
     image = image[y_range, x_range].copy()
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV_FULL)
     mask = cv2.inRange(hsv, (min_h, min_s, min_v), (max_h, max_s, max_v))
-    mask = mask.astype(bool)
     if not inverse_mask:
-        background_mask = np.logical_not(mask)
+        background_mask = (mask == 0)
     else:
-        background_mask = mask
+        background_mask = (mask != 0)
     image[background_mask] = np.array([0, 0, 0])
     if show_image:
         show(image)
