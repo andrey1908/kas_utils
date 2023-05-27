@@ -144,9 +144,9 @@ def get_sv(hsv):
 
 
 def get_mask_for_h(hsv,
-        min_s, max_s, min_v, max_v,
-        min_sv, max_sv):
-    if min_s == 0 and max_s == 255 and min_v == 0 and max_v == 255:
+        min_s=0, max_s=255, min_v=0, max_v=255,
+        min_sv=0, max_sv=255):
+    if min_sv != 0 or max_sv != 255:
         use_sv_limits = True
     else:
         use_sv_limits = False
