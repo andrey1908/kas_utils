@@ -114,7 +114,7 @@ def plot_h_histogram(image, select_image_roi=True,
         min_s=0, max_s=255, min_v=0, max_v=255,
         min_sv=0, max_sv=255, show=True):
     if select_image_roi:
-        x_range, y_range = select_roi(image)
+        x_range, y_range = select_roi(image, full_by_default=True)
     else:
         x_range, y_range = slice(0, None), slice(0, None)
     image = image[y_range, x_range]
@@ -176,3 +176,25 @@ def get_mask_for_h(hsv,
         sv = get_sv(hsv)
         mask = (sv >= min_sv) & (sv <= max_sv)
     return mask
+
+
+def plot_sv_points(image, select_image_roi=True,
+        min_h=0, max_h=255, show=True):
+    if select_image_roi:
+        x_range, y_range = select_roi(image, full_by_default=True)
+    else:
+        x_range, y_range = slice(0, None), slice(0, None)
+    image = image[y_range, x_range]
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV_FULL)
+    h = hsv[:, :, 0]
+    mask = (h >= min_h) & (h <= max_h)
+    hsv = hsv[mask]
+    s = hsv[:, 1]
+    v = hsv[:, 2]
+    plt.xlim([0, 255])
+    plt.xlabel('s')
+    plt.ylim([0, 255])
+    plt.ylabel('v')
+    plt.plot(s, v, 'o', markersize=1)
+    if show:
+        plt.show()
