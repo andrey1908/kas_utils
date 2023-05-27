@@ -3,6 +3,32 @@ import cv2
 import matplotlib.pyplot as plt
 
 
+def segment_by_color(image, min_color, max_color, \
+        x_range=slice(0, None), y_range=slice(0, None),
+        refine=False, min_polygon_length=100, max_polygon_length=1000,
+        return_orig_mask=False):
+    mask_full = cv2.inRange(image, min_color, max_color)
+    mask = np.zeros(mask_full.shape, dtype=mask_full.dtype)
+    mask[y_range, x_range] = mask_full[y_range, x_range]
+    if refine:
+        polygons, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        refined_mask = np.zeros(mask.shape, dtype=mask.dtype)
+        accepted_polygons = list()
+        for polygon in polygons:
+            if min_polygon_length <= len(polygon) <= max_polygon_length:
+                cv2.fillPoly(refined_mask, [polygon], 255)
+                accepted_polygons.append(polygon)
+        if return_orig_mask:
+            return (refined_mask, mask), accepted_polygons
+        else:
+            return refined_mask, accepted_polygons
+    else:
+        return mask
+    
+
+#############
+
+
 def show(image, window_name="show image"):
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.imshow(window_name, image)
@@ -28,27 +54,25 @@ def select_roi(image, full_by_default=False, window_name="select roi"):
     return x_range, y_range
 
 
-def segment_by_color(image, min_color, max_color, \
-        x_range=slice(0, None), y_range=slice(0, None),
-        refine=False, min_polygon_length=100, max_polygon_length=1000,
-        return_orig_mask=False):
-    mask_full = cv2.inRange(image, min_color, max_color)
-    mask = np.zeros(mask_full.shape, dtype=mask_full.dtype)
-    mask[y_range, x_range] = mask_full[y_range, x_range]
-    if refine:
-        polygons, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        refined_mask = np.zeros(mask.shape, dtype=mask.dtype)
-        accepted_polygons = list()
-        for polygon in polygons:
-            if min_polygon_length <= len(polygon) <= max_polygon_length:
-                cv2.fillPoly(refined_mask, [polygon], 255)
-                accepted_polygons.append(polygon)
-        if return_orig_mask:
-            return (refined_mask, mask), accepted_polygons
-        else:
-            return refined_mask, accepted_polygons
+def get_and_apply_mask(image, select_image_roi=True,
+        min_h=0, max_h=255, min_s=0, max_s=255, min_v=0, max_v=255,
+        inverse_mask=False, show_image=True):
+    if select_image_roi:
+        x_range, y_range = select_roi(image, full_by_default=True)
     else:
-        return mask
+        x_range, y_range = slice(0, None), slice(0, None)
+    image = image[y_range, x_range].copy()
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV_FULL)
+    mask = segment_by_color(hsv, (min_h, min_s, min_v), (max_h, max_s, max_v))
+    mask = mask.astype(bool)
+    if not inverse_mask:
+        background_mask = np.logical_not(mask)
+    else:
+        background_mask = mask
+    image[background_mask] = np.array([0, 0, 0])
+    if show_image:
+        show(image)
+    return image, mask
 
 
 def plot_s_histogram(image, select_image_roi=True, show=True):
