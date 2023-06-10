@@ -77,7 +77,7 @@ def plot_s_histogram(image, select_image_roi=True, show=True):
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV_FULL)
     s = hsv[:, :, 1]
     s = s.flatten()
-    plt.hist(s, bins=256)
+    plt.hist(s, bins=256, range=(0, 255))
     if show:
         plt.show()
 
@@ -91,7 +91,7 @@ def plot_v_histogram(image, select_image_roi=True, show=True):
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV_FULL)
     v = hsv[:, :, 2]
     v = v.flatten()
-    plt.hist(v, bins=256)
+    plt.hist(v, bins=256, range=(0, 255))
     if show:
         plt.show()
 
@@ -105,7 +105,7 @@ def plot_sv_histogram(image, select_image_roi=True, show=True):
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV_FULL)
     sv = get_sv(hsv)
     sv = sv.flatten()
-    plt.hist(sv, bins=256)
+    plt.hist(sv, bins=256, range=(0, 255))
     if show:
         plt.show()
 
@@ -123,7 +123,7 @@ def plot_h_histogram(image, select_image_roi=True,
 
     mask = get_mask_for_h(hsv, min_s, max_s, min_v, max_v, min_sv, max_sv)
     h = h[mask]
-    plt.hist(h, bins=256)
+    plt.hist(h, bins=256, range=(0, 255))
     if show:
         plt.show()
 
