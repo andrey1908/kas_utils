@@ -198,3 +198,11 @@ def plot_sv_points(image, select_image_roi=True,
     plt.plot(s, v, 'o', markersize=1)
     if show:
         plt.show()
+
+def show_hsv_color(h, s, v):
+    hsv = np.zeros((200, 200, 3), dtype=np.uint8)
+    hsv[:, :, 0] = h
+    hsv[:, :, 1] = s
+    hsv[:, :, 2] = v
+    bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR_FULL)
+    show(bgr)
