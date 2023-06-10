@@ -9,14 +9,17 @@ def get_mask_in_roi(mask, x_range, y_range):
     return mask_in_roi
 
 
-def refine_mask_by_polygons(mask, min_polygon_length=100, max_polygon_length=1000):
+def refine_mask_by_polygons(mask, min_polygon_length=100, max_polygon_length=1000,
+        min_polygon_area_length_ratio=0):
     polygons, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     refined_mask = np.zeros_like(mask)
     accepted_polygons = list()
     for polygon in polygons:
         if min_polygon_length <= len(polygon) <= max_polygon_length:
-            cv2.fillPoly(refined_mask, [polygon], 255)
-            accepted_polygons.append(polygon)
+            if min_polygon_area_length_ratio == 0 or \
+                    cv2.contourArea(polygon) / len(polygon) >= min_polygon_area_length_ratio:
+                cv2.fillPoly(refined_mask, [polygon], 255)
+                accepted_polygons.append(polygon)
     return refined_mask, accepted_polygons
 
 
