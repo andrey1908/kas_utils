@@ -62,19 +62,33 @@ def select_roi(image, full_by_default=False, window_name="select roi"):
 
 def get_and_apply_mask(image, select_image_roi=True,
         min_h=0, max_h=255, min_s=0, max_s=255, min_v=0, max_v=255,
-        inverse_mask=False, show_image=True):
+        min_sv=0, max_sv=255,
+        shift_h=0, inverse_mask=False, show_image=True):
     if select_image_roi:
         x_range, y_range = select_roi(image, full_by_default=True)
     else:
         x_range, y_range = slice(0, None), slice(0, None)
     image = image[y_range, x_range].copy()
+
+    if min_sv != 0 or max_sv != 255:
+        use_sv_limits = True
+    else:
+        use_sv_limits = False
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV_FULL)
-    mask = cv2.inRange(hsv, (min_h, min_s, min_v), (max_h, max_s, max_v))
+    hsv[:, :, 0] += shift_h
+    if use_sv_limits:
+        h = hsv[:, :, 0]
+        sv = get_sv(hsv)
+        h_sv = np.dstack((h, sv))
+        mask = cv2.inRange(h_sv, (min_h, min_sv), (max_h, max_sv))
+    else:
+        mask = cv2.inRange(hsv, (min_h, min_s, min_v), (max_h, max_s, max_v))
+
     if not inverse_mask:
         background = (mask == 0)
     else:
         background = (mask != 0)
-    image[background] = np.array([0, 0, 0])
+    image[background] = 0
     if show_image:
         show(image)
     return image, mask
@@ -124,17 +138,30 @@ def plot_sv_histogram(image, select_image_roi=True, show=True):
 
 def plot_h_histogram(image, select_image_roi=True,
         min_s=0, max_s=255, min_v=0, max_v=255,
-        min_sv=0, max_sv=255, show=True):
+        min_sv=0, max_sv=255, shift_h=0, show=True):
     if select_image_roi:
         x_range, y_range = select_roi(image, full_by_default=True)
     else:
         x_range, y_range = slice(0, None), slice(0, None)
     image = image[y_range, x_range]
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV_FULL)
-    h = hsv[:, :, 0]
 
-    mask = get_mask_for_h(hsv, min_s, max_s, min_v, max_v, min_sv, max_sv)
-    h = h[mask]
+    if min_sv != 0 or max_sv != 255:
+        use_sv_limits = True
+    else:
+        use_sv_limits = False
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV_FULL)
+    if use_sv_limits:
+        sv = get_sv(hsv)
+        mask = cv2.inRange(sv, min_sv, max_sv)
+    else:
+        s = hsv[:, :, 1]
+        v = hsv[:, :, 2]
+        s_v = np.dstack((s, v))
+        mask = cv2.inRange(s_v, (min_s, min_v), (max_s, max_v))
+
+    h = hsv[:, :, 0]
+    h = h[mask != 0]
+    h += shift_h
     plt.hist(h, bins=256, range=(0, 255))
     if show:
         plt.show()
@@ -158,9 +185,10 @@ def show_sv(image):
     show(sv)
 
 
-def show_h(image):
+def show_h(image, shift_h=0):
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV_FULL)
     h = hsv[:, :, 0]
+    h += shift_h
     show(h)
 
 
@@ -172,26 +200,8 @@ def get_sv(hsv):
     return sv
 
 
-def get_mask_for_h(hsv,
-        min_s=0, max_s=255, min_v=0, max_v=255,
-        min_sv=0, max_sv=255):
-    if min_sv != 0 or max_sv != 255:
-        use_sv_limits = True
-    else:
-        use_sv_limits = False
-
-    if not use_sv_limits:
-        s = hsv[:, :, 1]
-        v = hsv[:, :, 2]
-        mask = (s >= min_s) & (s <= max_s) & (v >= min_v) & (v <= max_v)
-    else:
-        sv = get_sv(hsv)
-        mask = (sv >= min_sv) & (sv <= max_sv)
-    return mask
-
-
 def plot_sv_points(image, select_image_roi=True,
-        min_h=0, max_h=255, show=True):
+        min_h=0, max_h=255, shift_h=0, show=True):
     if select_image_roi:
         x_range, y_range = select_roi(image, full_by_default=True)
     else:
@@ -199,8 +209,9 @@ def plot_sv_points(image, select_image_roi=True,
     image = image[y_range, x_range]
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV_FULL)
     h = hsv[:, :, 0]
-    mask = (h >= min_h) & (h <= max_h)
-    hsv = hsv[mask]
+    h += shift_h
+    mask = cv2.inRange(h, min_h, max_h)
+    hsv = hsv[mask != 0]
     s = hsv[:, 1]
     v = hsv[:, 2]
     plt.xlim([0, 255])
