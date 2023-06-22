@@ -48,6 +48,14 @@ class ArucoList:
         self.tvecs = None
         self.reprojection_errors = None
 
+    def get_pose(self, i, i_pose):
+        rvec = self.rvecs[i, i_pose]
+        tvec = self.tvecs[i, i_pose]
+        pose = np.eye(4)
+        pose[:3, :3] = cv2.Rodrigues(rvec)[0]
+        pose[:3, 3] = tvec
+        return pose
+
 
 class PoseSelectors:
     # rvec.shape = (n_poses, 3)
