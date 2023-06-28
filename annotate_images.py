@@ -193,7 +193,7 @@ def visualize_annotations(images_folder, annotations_folder, palette):
         overlay = image.copy()
         for obj in objects:
             mask = (annotation == obj)
-            class_id = obj >> 8
+            class_id = (obj >> 8) & 0xFF
             polygons, _ = cv2.findContours(mask.astype(np.uint8),
                 cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
