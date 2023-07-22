@@ -7,8 +7,8 @@ import cv2
 # boxes: shape - (n, 4), [x1, y1, x2, y2], dtype - int
 # masks: shape - (n, h, w), dtype - np.uint8
 def draw_objects(image, scores, objects_ids, boxes=None, masks=None, min_score=0.0,
-        draw_scores=True, draw_ids=False, draw_boxes=False, draw_masks=False,
-        palette=((0, 0, 255),), color_by_id=False):
+        draw_scores=False, draw_ids=False, draw_boxes=False, draw_masks=False,
+        palette=((0, 0, 255),), color_by_object_id=False):
     if boxes is None and masks is None:
         raise RuntimeError("Both boxes and masks are None")
 
@@ -22,7 +22,7 @@ def draw_objects(image, scores, objects_ids, boxes=None, masks=None, min_score=0
         if score < min_score:
             continue
 
-        if color_by_id:
+        if color_by_object_id:
             color = palette[object_id % len(palette)]
         else:
             color = palette[i % len(palette)]
