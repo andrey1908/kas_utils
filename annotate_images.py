@@ -3,6 +3,7 @@ import numpy as np
 from shutil import copy, move
 import os
 import os.path as osp
+from visualization import draw_objects
 
 
 # Recommended folder structure:
@@ -199,19 +200,31 @@ def visualize_annotations(images_folder, annotations_folder, palette):
         image = cv2.imread(image_file)
         annotation = cv2.imread(annotation_file, cv2.IMREAD_UNCHANGED)
 
+        scores = list()
+        classes_ids = list()
+        boxes = list()
+        masks = list()
         objects = np.unique(annotation)
         objects = objects[objects != 0]
-        overlay = image.copy()
         for obj in objects:
-            mask = (annotation == obj)
             class_id = (obj >> 8) & 0xFF
-            polygons, _ = cv2.findContours(mask.astype(np.uint8),
-                cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            mask = (annotation == obj)
+            pixels = np.nonzero(mask)
+            x1 = min(pixels[1])
+            y1 = min(pixels[0])
+            x2 = max(pixels[1])
+            y2 = max(pixels[0])
+            box = [x1, y1, x2, y2]
+            scores.append(1)
+            classes_ids.append(class_id)
+            boxes.append(box)
+            masks.append(mask)
+        scores = np.array(scores)
+        classes_ids = np.array(classes_ids)
+        boxes = np.array(boxes)
+        masks = np.array(masks, dtype=np.uint8)
 
-            color = palette[class_id]
-            cv2.polylines(image, polygons, True, color, thickness=2)
-            overlay[mask] = np.array(color, dtype=np.uint8)
-        cv2.addWeighted(image, 0.7, overlay, 0.3, 0, dst=image)
+        draw_objects(image, scores, classes_ids, boxes, masks, draw_masks=True)
 
         cv2.setWindowTitle("visualize_annotations_window", image_file)
         cv2.imshow("visualize_annotations_window", image)
