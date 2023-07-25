@@ -5,6 +5,17 @@ import os
 import os.path as osp
 
 
+# Recommended folder structure:
+# dataset/
+#     all/
+#         images/              - for annotated images
+#         instances/           - for annotations
+#         raw_images/          - for new and already annotated images
+#         rejected_raw_images/ - for images that failed to be annotated
+#     training/
+#     validation/
+
+
 def check_files(images_files, annotations_files):
     if len(images_files) != len(annotations_files):
         return False
