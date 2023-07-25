@@ -154,6 +154,7 @@ def split_dataset(images_folder, annotations_folder,
     unused_images_annotations_files = \
         [(image_file, annotation_file) for image_file, annotation_file in
             zip(images_files, annotations_files) if image_file not in out_images_files]
+    print(f"Found {len(unused_images_annotations_files)} new images")
     if len(unused_images_annotations_files) == 0:
         return
     unused_images_files, unused_annotations_files = zip(*unused_images_annotations_files)
