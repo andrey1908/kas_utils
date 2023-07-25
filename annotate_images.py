@@ -27,11 +27,11 @@ def check_files(images_files, annotations_files):
 
 
 class AnnotateImages:
-    def __init__(self, model, model_args, model_kwargs, categories):
+    def __init__(self, model, model_args, model_kwargs, classes_names):
         self.model = model
         self.model_args = model_args
         self.model_kwargs = model_kwargs
-        self.categories = categories
+        self.classes_names = classes_names
 
     def annotate_images(self, raw_images_folder,
             out_images_folder, out_annotations_folder):
@@ -49,7 +49,7 @@ class AnnotateImages:
                 raw_image_file, *self.model_args, **self.model_kwargs)
             image = cv2.imread(raw_image_file)
             accepted, accepted_indices, accepted_classes_ids = self._validate_image(
-                image, masks, classes_ids, self.categories)
+                image, masks, classes_ids)
             if accepted:
                 annotation = self._masks_to_annotation(
                     masks, accepted_indices, accepted_classes_ids)
@@ -66,14 +66,14 @@ class AnnotateImages:
                 print(f"Rejected {raw_image_file}")
         cv2.destroyWindow("annotate_images_window")
 
-    def _validate_image(self, image, segmentations, classes_ids, categories):
+    def _validate_image(self, image, segmentations, classes_ids):
         accepted_indices = list()
         accepted_classes_ids = list()
         for i, (mask, class_id) in enumerate(zip(segmentations, classes_ids)):
             masked_image = image.copy()
             masked_image[mask == 0] //= 6
 
-            prompt_str = f"{categories[class_id]} [accept(a) / reject(r) / reject image(Esc)]"
+            prompt_str = f"{self.classes_names[class_id]} [accept(a) / reject(r) / reject image(Esc)]"
             cv2.setWindowTitle("annotate_images_window", prompt_str)
             cv2.imshow("annotate_images_window", masked_image)
             key = -1
