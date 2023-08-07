@@ -9,6 +9,26 @@ import cv2
 def draw_objects(image, scores, objects_ids, boxes=None, masks=None, min_score=0.0,
         draw_scores=False, draw_ids=False, draw_boxes=False, draw_masks=False,
         palette=((0, 0, 255),), color_by_object_id=False):
+
+    def check_label_fitness(image_size, text_size, text_pos):
+        image_width, image_height = image_size
+        text_width, text_height = text_size
+        text_x, text_y = text_pos
+
+        dx = 0
+        if text_x < 0:
+            dx = -text_x
+        elif text_x + text_width > image_width:
+            dx = image_width - text_x - text_width
+
+        dy = 0
+        if text_y < 0:
+            dy = -text_y
+        elif text_y + text_height > image_height:
+            dy = image_height - text_y - text_height
+
+        return dx, dy
+
     if boxes is None and masks is None:
         raise RuntimeError("Both boxes and masks are None")
 
@@ -17,6 +37,8 @@ def draw_objects(image, scores, objects_ids, boxes=None, masks=None, min_score=0
     if masks is None:
         masks = [None] * len(scores)
 
+    width = image.shape[1]
+    height = image.shape[0]
     overlay = image.copy()
     for i, (score, object_id, box, mask) in enumerate(zip(scores, objects_ids, boxes, masks)):
         if score < min_score:
@@ -35,14 +57,20 @@ def draw_objects(image, scores, objects_ids, boxes=None, masks=None, min_score=0
                 text.append(f"id: {object_id}")
             text = ", ".join(text)
             if box is not None:
-                x, y = box[0], box[1]
+                x, y_top, y_bottom = box[0], box[1], box[3]
             else:
                 nonzero_y, nonzero_x = np.nonzero(mask)
-                x, y = nonzero_x.min(), nonzero_y.min()
-            y -= 5
+                x, y_top, y_bottom = nonzero_x.min(), nonzero_y.min(), nonzero_y.max()
+            y = y_top - 5
             font = cv2.FONT_HERSHEY_SIMPLEX
             font_scale = 1
-            cv2.putText(image, text, (x, y), font, font_scale, color, thickness=2)
+            thickness = 2
+            text_size, _ = cv2.getTextSize(text, font, font_scale, thickness)
+            dx, dy = check_label_fitness((width, height), text_size, (x, y))
+            x += dx
+            if dy > 0:
+                y = y_bottom + text_size[1] + 5
+            cv2.putText(image, text, (x, y), font, font_scale, color, thickness=thickness)
 
         if draw_boxes:
             x1, y1, x2, y2 = box

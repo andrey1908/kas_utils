@@ -9,18 +9,19 @@ def get_mask_in_roi(mask, x_range, y_range):
     return mask_in_roi
 
 
-def refine_mask_by_polygons(mask, min_polygon_length=100, max_polygon_length=1000,
-        min_polygon_area_length_ratio=0, select_top_n_polygons_by_length=0):
+def refine_mask_by_polygons(mask, min_polygon_length=0, max_polygon_length=-1,
+        min_polygon_area_length_ratio=0, select_top_n_polygons_by_length=-1):
     polygons, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
     accepted_polygons = list()
     for polygon in polygons:
-        if min_polygon_length <= len(polygon) <= max_polygon_length:
+        if len(polygon) >= min_polygon_length and \
+                (max_polygon_length < 0 or len(polygon) <= max_polygon_length):
             if min_polygon_area_length_ratio == 0 or \
                     cv2.contourArea(polygon) / len(polygon) >= min_polygon_area_length_ratio:
                 accepted_polygons.append(polygon)
 
-    if select_top_n_polygons_by_length > 0 and \
+    if select_top_n_polygons_by_length >= 0 and \
             len(accepted_polygons) > select_top_n_polygons_by_length:
         accepted_polygons = sorted(accepted_polygons, key=lambda p: -len(p))
         accepted_polygons = accepted_polygons[:select_top_n_polygons_by_length]
