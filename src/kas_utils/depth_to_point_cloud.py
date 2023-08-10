@@ -27,23 +27,30 @@ class DepthToPointCloud:
                 "Requested backend is torch, "
                 "but torch module could not be imported.")
         if self.backend == "scipy":
-            self.pool_fn = self._pool_depth_with_scipy
+            self.min_pool_fn = self._min_pool_with_scipy
         else:
-            self.pool_fn = self._pool_depth_with_torch
+            self.min_pool_fn = self._min_pool_with_torch
 
     def _check_D_is_zero(self):
         assert np.all(self.D == 0), "D != 0, but only rectified depth is supported"
 
-    def _pool_depth_with_scipy(self, depth):
-        pooled = minimum_filter(depth, size=self.pool_size,
-            origin=-(self.pool_size // 2), mode='constant', cval=np.inf)
-        pooled = pooled[::self.pool_size, ::self.pool_size]
+    def _min_pool_with_scipy(self, input):
+        pooled = minimum_filter(input, size=self.pool_size,
+            origin=-(self.pool_size // 2), mode='constant', cval=np.inf,
+            axes=(-2, -1))
+        pooled = pooled[..., ::self.pool_size, ::self.pool_size]
         return pooled
 
-    def _pool_depth_with_torch(self, depth):
-        depth = np.expand_dims(depth, axis=0)
+    def _min_pool_with_torch(self, input):
+        if input.ndim == 2:
+            input = np.expand_dims(input, axis=0)
+            expanded = True
+        else:
+            expanded = False
         max_pool_fn = torch.nn.MaxPool2d(self.pool_size)
-        pooled = -max_pool_fn(-torch.from_numpy(depth)).numpy().squeeze()
+        pooled = -max_pool_fn(-torch.from_numpy(input)).numpy()
+        if expanded:
+            pooled = pooled[0]
         return pooled
 
     def convert(self, depth):
@@ -52,18 +59,21 @@ class DepthToPointCloud:
         scale = get_depth_scale(depth)
         depth = depth * scale
 
-        invalid = (depth <= 0) | ~np.isfinite(depth)
-        depth[invalid] = np.inf
+        if self.pool_size > 1:
+            invalid = (depth <= 0) | ~np.isfinite(depth)
+            depth[invalid] = np.inf
+            depth = self.min_pool_fn(depth)
+            K = self.K / self.pool_size
+            valid = np.isfinite(depth)
+        else:
+            K = self.K
+            valid = (depth > 0) & np.isfinite(depth)
 
-        pooled_depth = self.pool_fn(depth)
-        pooled_K = self.K / self.pool_size
-        fx = pooled_K[0, 0]
-        fy = pooled_K[1, 1]
-        cx = pooled_K[0, 2]
-        cy = pooled_K[1, 2]
-
-        valid = np.isfinite(pooled_depth)
-        z = pooled_depth[valid]
+        fx = K[0, 0]
+        fy = K[1, 1]
+        cx = K[0, 2]
+        cy = K[1, 2]
+        z = depth[valid]
         v, u = np.where(valid)
         x = (u - cx) / fx * z
         y = (v - cy) / fy * z
