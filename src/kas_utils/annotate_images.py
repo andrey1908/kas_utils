@@ -3,7 +3,7 @@ import numpy as np
 from shutil import copy, move
 import os
 import os.path as osp
-from visualization import draw_objects
+from .visualization import draw_objects
 
 
 # Recommended folder structure:
