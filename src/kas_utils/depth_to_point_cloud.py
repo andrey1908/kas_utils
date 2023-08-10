@@ -56,27 +56,34 @@ class DepthToPointCloud:
     def convert(self, depth):
         self._check_D_is_zero()
 
-        scale = get_depth_scale(depth)
-        depth = depth * scale
-
         if self.pool_size > 1:
+            scale = get_depth_scale(depth)
+            depth = depth * scale
             invalid = (depth <= 0) | ~np.isfinite(depth)
             depth[invalid] = np.inf
             depth = self.min_pool_fn(depth)
             K = self.K / self.pool_size
+            fx = K[0, 0]
+            fy = K[1, 1]
+            cx = K[0, 2]
+            cy = K[1, 2]
             valid = np.isfinite(depth)
+            z = depth[valid]
+            v, u = np.where(valid)
+            x = (u - cx) / fx * z
+            y = (v - cy) / fy * z
         else:
-            K = self.K
+            scale = get_depth_scale(depth)
             valid = (depth > 0) & np.isfinite(depth)
-
-        fx = K[0, 0]
-        fy = K[1, 1]
-        cx = K[0, 2]
-        cy = K[1, 2]
-        z = depth[valid]
-        v, u = np.where(valid)
-        x = (u - cx) / fx * z
-        y = (v - cy) / fy * z
+            fx = self.K[0, 0]
+            fy = self.K[1, 1]
+            cx = self.K[0, 2]
+            cy = self.K[1, 2]
+            z = depth[valid]
+            z = z * scale
+            v, u = np.where(valid)
+            x = (u - cx) / fx * z
+            y = (v - cy) / fy * z
 
         if self.return_named_point_cloud:
             point_cloud = np.rec.fromarrays([x, y, z], names=['x', 'y', 'z'])
