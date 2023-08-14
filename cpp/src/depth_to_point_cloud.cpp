@@ -19,7 +19,7 @@ DepthToPointCloud<T>::DepthToPointCloud(
 
 
 template<typename T>
-inline T DepthToPointCloud<T>::init_point_cloud()
+inline T DepthToPointCloud<T>::create_point_cloud()
 {
     static_assert(
         std::is_same<T, pcl::PointCloud<pcl::PointXYZ>::Ptr>::value ||
@@ -36,7 +36,7 @@ inline T DepthToPointCloud<T>::init_point_cloud()
 
 
 template<typename T>
-inline void DepthToPointCloud<T>::prepare_point_cloud(T& point_cloud,
+inline void DepthToPointCloud<T>::init_point_cloud(T& point_cloud,
     int points_number)
 {
     static_assert(
@@ -157,7 +157,7 @@ T DepthToPointCloud<T>::convert(const cv::Mat& depth) const
             "DepthToPointCloud: Wrong number of dimentions in input depth image. "
             "Expected 2, got " + std::to_string(depth.dims) + ".");
     }
-    T point_cloud = init_point_cloud();
+    T point_cloud = create_point_cloud();
     float depth_scale = getDepthScale(depth);
     if (depth_scale == 0.f)
     {
@@ -202,7 +202,7 @@ T DepthToPointCloud<T>::convert(const cv::Mat& depth) const
         }
     }
 
-    prepare_point_cloud(point_cloud, points_number);
+    init_point_cloud(point_cloud, points_number);
     if (pool_size_ > 1)
     {
         switch (depth.type())

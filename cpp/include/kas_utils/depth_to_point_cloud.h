@@ -14,8 +14,8 @@ public:
     T convert(const cv::Mat& depth) const;
 
 private:
-    static T init_point_cloud();
-    static void prepare_point_cloud(T& point_cloud, int points_number);
+    static T create_point_cloud();
+    static void init_point_cloud(T& point_cloud, int points_number);
     static void append_to_point_cloud(T& point_cloud, float x, float y, float z);
     static void post_process_point_cloud(T& point_cloud, int points_number);
 

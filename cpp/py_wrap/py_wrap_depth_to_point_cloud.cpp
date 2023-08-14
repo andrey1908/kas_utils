@@ -1,11 +1,11 @@
 #include "kas_utils/depth_to_point_cloud.h"
 
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
-
 #include <vector>
 #include <utility>
 #include <type_traits>
+
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 
 
 namespace py = pybind11;
