@@ -4,6 +4,7 @@
 #include <pcl/point_types.h>
 
 #include <cmath>
+#include <string>
 #include <utility>
 #include <type_traits>
 #include <stdexcept>
@@ -150,11 +151,23 @@ float DepthToPointCloud<T>::getDepthScale(const cv::Mat& depth)
 template<typename T>
 T DepthToPointCloud<T>::convert(const cv::Mat& depth) const
 {
+    if (depth.dims != 2)
+    {
+        throw std::runtime_error(
+            "DepthToPointCloud: Wrong number of dimentions in input depth image. "
+            "Expected 2, got " + std::to_string(depth.dims) + ".");
+    }
     T point_cloud = init_point_cloud();
     float depth_scale = getDepthScale(depth);
     if (depth_scale == 0.f)
     {
-        return point_cloud;
+        throw std::runtime_error(
+            "DepthToPointCloud: Unknown format of input depth image. "
+            "Expected "
+            "CV_16UC1 (" + std::to_string(CV_16UC1) + "), "
+            "CV_32FC1 (" + std::to_string(CV_32FC1) + ") or "
+            "CV_64FC1 (" + std::to_string(CV_64FC1) + "), "
+            "got " + std::to_string(depth.type()) + ".");
     }
 
     int points_number;
