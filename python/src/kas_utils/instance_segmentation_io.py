@@ -30,7 +30,7 @@ def get_instance_segmentation(classes_ids, masks):
     counter = 1
     for class_id, mask in zip(classes_ids, masks):
         assert class_id < 2 ** 8
-        obj = class_id << 8 + counter
+        obj = (class_id << 8) + counter
         out_instance[mask != 0] = obj
         counter += 1
 
