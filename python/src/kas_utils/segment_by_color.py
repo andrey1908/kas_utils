@@ -22,49 +22,63 @@ def refine_mask_by_polygons(mask,
         "can't both be >= 0"
 
     polygons, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    lengths = [None] * len(polygons)
-    areas = [None] * len(polygons)
+    lengths = (None,) * len(polygons)
+    areas = (None,) * len(polygons)
+
+    laps = list(zip(lengths, areas, polygons))
 
     if min_polygon_length > 0 or max_polygon_length >= 0:
-        if any(l is None for l in lengths):
-            lengths = [len(p) for p in polygons]
-        lengths, areas, polygons = \
-            zip(*[(l, a, p) for l, a, p in zip(lengths, areas, polygons) if
-                l >= min_polygon_length and
-                (max_polygon_length < 0 or l <= max_polygon_length)])
+        if any(l is None for l, _, _ in laps):
+            _, areas, polygons = zip(*laps)
+            lengths = [len(p) for _, _, p in laps]
+            laps = zip(lengths, areas, polygons)
+        laps = [(l, a, p) for l, a, p in laps if
+            l >= min_polygon_length and
+            (max_polygon_length < 0 or l <= max_polygon_length)]
 
     if min_polygon_area > 0 or max_polygon_area >= 0:
-        if any(a is None for a in areas):
-            areas = [cv2.contourArea(p) for p in polygons]
-        lengths, areas, polygons = \
-            zip(*[(l, a, p) for l, a, p in zip(lengths, areas, polygons) if
-                a >= min_polygon_area and
-                (max_polygon_area < 0 or a <= max_polygon_area)])
+        if any(a is None for _, a, _ in laps):
+            lengths, _, polygons = zip(*laps)
+            areas = [cv2.contourArea(p) for _, _, p in laps]
+            laps = zip(lengths, areas, polygons)
+        laps = [(l, a, p) for l, a, p in laps if
+            a >= min_polygon_area and
+            (max_polygon_area < 0 or a <= max_polygon_area)]
 
     if min_polygon_area_length_ratio > 0:
-        if any(l is None for l in lengths):
-            lengths = [len(p) for p in polygons]
-        if any(a is None for a in areas):
-            areas = [cv2.contourArea(p) for p in polygons]
-        lengths, areas, polygons = \
-            zip(*[(l, a, p) for l, a, p in zip(lengths, areas, polygons) if
-                a / l >= min_polygon_area_length_ratio])
+        if any(l is None for l, _, _ in laps):
+            _, areas, polygons = zip(*laps)
+            lengths = [len(p) for _, _, p in laps]
+            laps = zip(lengths, areas, polygons)
+        if any(a is None for _, a, _ in laps):
+            lengths, _, polygons = zip(*laps)
+            areas = [cv2.contourArea(p) for _, _, p in laps]
+            laps = zip(lengths, areas, polygons)
+        laps = [(l, a, p) for l, a, p in laps if
+            a / l >= min_polygon_area_length_ratio]
 
     if select_top_n_polygons_by_length >= 0 and \
-            len(polygons) > select_top_n_polygons_by_length:
-        if any(l is None for l in lengths):
-            lengths = [len(p) for p in polygons]
-        laps = list(zip(lengths, areas, polygons))
+            len(laps) > select_top_n_polygons_by_length:
+        if any(l is None for l, _, _ in laps):
+            _, areas, polygons = zip(*laps)
+            lengths = [len(p) for _, _, p in laps]
+            laps = zip(lengths, areas, polygons)
         laps = sorted(laps, key=lambda lap: -lap[0])
-        lengths, areas, polygons = zip(*laps[:select_top_n_polygons_by_length])
+        laps = laps[:select_top_n_polygons_by_length]
 
     if select_top_n_polygons_by_area >= 0 and \
-            len(polygons) > select_top_n_polygons_by_area:
-        if any(a is None for a in areas):
-            areas = [cv2.contourArea(p) for p in polygons]
-        laps = list(zip(lengths, areas, polygons))
+            len(laps) > select_top_n_polygons_by_area:
+        if any(a is None for _, a, _ in laps):
+            lengths, _, polygons = zip(*laps)
+            areas = [cv2.contourArea(p) for _, _, p in laps]
+            laps = zip(lengths, areas, polygons)
         laps = sorted(laps, key=lambda lap: -lap[1])
-        lengths, areas, polygons = zip(*laps[:select_top_n_polygons_by_area])
+        laps = laps[:select_top_n_polygons_by_area]
+
+    if len(laps) > 0:
+        lengths, areas, polygons = zip(*laps)
+    else:
+        lengths, areas, polygons = tuple(), tuple(), tuple()
 
     refined_mask = np.zeros_like(mask)
     for p in polygons:
