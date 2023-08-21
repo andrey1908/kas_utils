@@ -55,7 +55,7 @@ def refine_mask_by_polygons(mask,
         if any(l is None for l in lengths):
             lengths = [len(p) for p in polygons]
         laps = list(zip(lengths, areas, polygons))
-        laps = sorted(laps, key=lambda lap: -len(lap[0]))
+        laps = sorted(laps, key=lambda lap: -lap[0])
         lengths, areas, polygons = zip(*laps[:select_top_n_polygons_by_length])
 
     if select_top_n_polygons_by_area >= 0 and \
@@ -63,7 +63,7 @@ def refine_mask_by_polygons(mask,
         if any(a is None for a in areas):
             areas = [cv2.contourArea(p) for p in polygons]
         laps = list(zip(lengths, areas, polygons))
-        laps = sorted(laps, key=lambda lap: -len(lap[1]))
+        laps = sorted(laps, key=lambda lap: -lap[1])
         lengths, areas, polygons = zip(*laps[:select_top_n_polygons_by_area])
 
     refined_mask = np.zeros_like(mask)
