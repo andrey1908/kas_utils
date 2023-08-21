@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+from .utils import show, select_roi
 
 
 def get_mask_in_roi(mask, x_range, y_range):
@@ -9,56 +10,70 @@ def get_mask_in_roi(mask, x_range, y_range):
     return mask_in_roi
 
 
-def refine_mask_by_polygons(mask, min_polygon_length=0, max_polygon_length=-1,
-        min_polygon_area_length_ratio=0, select_top_n_polygons_by_length=-1):
-    polygons, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+def refine_mask_by_polygons(mask,
+        min_polygon_length=0, max_polygon_length=-1,
+        min_polygon_area=0, max_polygon_area=-1,
+        min_polygon_area_length_ratio=0,
+        select_top_n_polygons_by_length=-1,
+        select_top_n_polygons_by_area=-1):
+    assert select_top_n_polygons_by_length < 0 or select_top_n_polygons_by_area < 0, \
+        "refine_mask_by_polygons: " \
+        "'select_top_n_polygons_by_length' and 'select_top_n_polygons_by_area' " \
+        "can't both be >= 0"
 
-    accepted_polygons = list()
-    for polygon in polygons:
-        if len(polygon) >= min_polygon_length and \
-                (max_polygon_length < 0 or len(polygon) <= max_polygon_length):
-            if min_polygon_area_length_ratio == 0 or \
-                    cv2.contourArea(polygon) / len(polygon) >= min_polygon_area_length_ratio:
-                accepted_polygons.append(polygon)
+    polygons, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    lengths = [None] * len(polygons)
+    areas = [None] * len(polygons)
+
+    if min_polygon_length > 0 or max_polygon_length >= 0:
+        if any(l is None for l in lengths):
+            lengths = [len(p) for p in polygons]
+        lengths, areas, polygons = \
+            zip(*[(l, a, p) for l, a, p in zip(lengths, areas, polygons) if
+            l >= min_polygon_length and \
+            (max_polygon_length < 0 or l <= max_polygon_length)])
+
+    if min_polygon_area > 0 or max_polygon_area >= 0:
+        if any(a is None for a in areas):
+            areas = [cv2.contourArea(p) for p in polygons]
+        lengths, areas, polygons = \
+            zip(*[(l, a, p) for l, a, p in zip(lengths, areas, polygons) if
+            a >= min_polygon_area and \
+            (max_polygon_area < 0 or a <= max_polygon_area)])
+
+    if min_polygon_area_length_ratio > 0:
+        if any(l is None for l in lengths):
+            lengths = [len(p) for p in polygons]
+        if any(a is None for a in areas):
+            areas = [cv2.contourArea(p) for p in polygons]
+        lengths, areas, polygons = \
+            zip(*[(l, a, p) for l, a, p in zip(lengths, areas, polygons) if
+            a / l >= min_polygon_area_length_ratio])
 
     if select_top_n_polygons_by_length >= 0 and \
-            len(accepted_polygons) > select_top_n_polygons_by_length:
-        accepted_polygons = sorted(accepted_polygons, key=lambda p: -len(p))
-        accepted_polygons = accepted_polygons[:select_top_n_polygons_by_length]
+            len(polygons) > select_top_n_polygons_by_length:
+        if any(l is None for l in lengths):
+            lengths = [len(p) for p in polygons]
+        laps = list(zip(lengths, areas, polygons))
+        laps = sorted(laps, key=lambda lap: -len(lap[0]))
+        lengths, areas, polygons = zip(*laps[:select_top_n_polygons_by_length])
+
+    if select_top_n_polygons_by_area >= 0 and \
+            len(polygons) > select_top_n_polygons_by_area:
+        if any(a is None for a in areas):
+            areas = [cv2.contourArea(p) for p in polygons]
+        laps = list(zip(lengths, areas, polygons))
+        laps = sorted(laps, key=lambda lap: -len(lap[1]))
+        lengths, areas, polygons = zip(*laps[:select_top_n_polygons_by_area])
 
     refined_mask = np.zeros_like(mask)
-    for accepted_polygon in accepted_polygons:
-        cv2.fillPoly(refined_mask, [accepted_polygon], 255)
+    for p in polygons:
+        cv2.fillPoly(refined_mask, [p], 255)
 
-    return refined_mask, accepted_polygons
+    return refined_mask, polygons, lengths, areas
 
 
 #############
-
-
-def show(image, window_name="show image"):
-    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-    cv2.imshow(window_name, image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-
-def select_roi(image, full_by_default=False, window_name="select roi"):
-    roi = cv2.selectROI(window_name, image, showCrosshair=False)
-    cv2.destroyAllWindows()
-
-    x, y, w, h = roi
-    if (x, y, w, h) == (0, 0, 0, 0):
-        if full_by_default:
-            x_range = slice(0, None)
-            y_range = slice(0, None)
-        else:
-            x_range = None
-            y_range = None
-    else:
-        x_range = slice(x, x + w)
-        y_range = slice(y, y + h)
-    return x_range, y_range
 
 
 def get_and_apply_mask(image, select_image_roi=True,
