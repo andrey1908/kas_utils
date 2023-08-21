@@ -14,6 +14,24 @@ def show(image, window_name="image", destroy_window=True):
     return key
 
 
+def select_roi(image, full_by_default=False, window_name="select roi"):
+    roi = cv2.selectROI(window_name, image, showCrosshair=False)
+    cv2.destroyAllWindows()
+
+    x, y, w, h = roi
+    if (x, y, w, h) == (0, 0, 0, 0):
+        if full_by_default:
+            x_range = slice(0, None)
+            y_range = slice(0, None)
+        else:
+            x_range = None
+            y_range = None
+    else:
+        x_range = slice(x, x + w)
+        y_range = slice(y, y + h)
+    return x_range, y_range
+
+
 def get_depth_scale(depth):
     if isinstance(depth, np.ndarray):
         dtype = depth.dtype
