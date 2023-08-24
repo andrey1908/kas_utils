@@ -143,7 +143,7 @@ float DepthToPointCloud<T>::getDepthScale(const cv::Mat& depth)
     }
     else
     {
-        return 0.f;
+        return -1.f;
     }
 }
 
@@ -159,7 +159,7 @@ T DepthToPointCloud<T>::convert(const cv::Mat& depth) const
     }
     T point_cloud = create_point_cloud();
     float depth_scale = getDepthScale(depth);
-    if (depth_scale == 0.f)
+    if (depth_scale < 0.f)
     {
         throw std::runtime_error(
             "DepthToPointCloud: Unknown format of input depth image. "
