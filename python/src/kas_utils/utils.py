@@ -71,10 +71,10 @@ class SavePathsGenerator:
         else:
             self.counter = self.start_from
 
-    def __call__(self):
-        return self.next()
+    def __iter__(self):
+        return self
 
-    def next(self):
+    def __next__(self):
         next_save_path = f'{self.counter:04}{self.extension}'
         next_save_path = osp.join(self.save_folder, next_save_path)
         self.counter += 1
