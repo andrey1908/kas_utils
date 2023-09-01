@@ -2,6 +2,26 @@ import numpy as np
 import cv2
 
 
+def _check_label_fitness(image_size, text_size, text_pos):
+    image_width, image_height = image_size
+    text_width, text_height = text_size
+    text_x, text_y = text_pos
+
+    dx = 0
+    if text_x < 0:
+        dx = -text_x
+    elif text_x + text_width > image_width:
+        dx = image_width - text_x - text_width
+
+    dy = 0
+    if text_y < 0:
+        dy = -text_y
+    elif text_y + text_height > image_height:
+        dy = image_height - text_y - text_height
+
+    return dx, dy
+
+
 # scores: shape - (n,), dtype - float
 # objects_ids (classes_ids or tracking_ids): shape - (n,), dtype - int
 # boxes: shape - (n, 4), [x1, y1, x2, y2], dtype - int
@@ -9,25 +29,19 @@ import cv2
 def draw_objects(image, scores, objects_ids, boxes=None, masks=None, min_score=0.0,
         draw_scores=False, draw_ids=False, draw_boxes=False, draw_masks=False,
         palette=((0, 0, 255),), color_by_object_id=False):
-
-    def check_label_fitness(image_size, text_size, text_pos):
-        image_width, image_height = image_size
-        text_width, text_height = text_size
-        text_x, text_y = text_pos
-
-        dx = 0
-        if text_x < 0:
-            dx = -text_x
-        elif text_x + text_width > image_width:
-            dx = image_width - text_x - text_width
-
-        dy = 0
-        if text_y < 0:
-            dy = -text_y
-        elif text_y + text_height > image_height:
-            dy = image_height - text_y - text_height
-
-        return dx, dy
+    num = None
+    if scores is not None:
+        assert num is None or len(scores) == num
+        num = len(scores)
+    if objects_ids is not None:
+        assert num is None or len(objects_ids) == num
+        num = len(objects_ids)
+    if boxes is not None:
+        assert num is None or len(boxes) == num
+        num = len(boxes)
+    if masks is not None:
+        assert num is None or len(masks) == num
+        num = len(masks)
 
     if boxes is None and masks is None:
         raise RuntimeError("Both boxes and masks are None")
@@ -66,7 +80,7 @@ def draw_objects(image, scores, objects_ids, boxes=None, masks=None, min_score=0
             font_scale = 1
             thickness = 2
             text_size, _ = cv2.getTextSize(text, font, font_scale, thickness)
-            dx, dy = check_label_fitness((width, height), text_size, (x, y))
+            dx, dy = _check_label_fitness((width, height), text_size, (x, y))
             x += dx
             if dy > 0:
                 y = y_bottom + text_size[1] + 5
