@@ -2,8 +2,7 @@ import numpy as np
 import cv2
 
 
-def read_instance_segmentation_file(instance_file):
-    instance = cv2.imread(instance_file, cv2.IMREAD_UNCHANGED)
+def parse_instance_segmentation(instance):
     assert instance.dtype == np.uint16
 
     objects = np.unique(instance)
@@ -35,6 +34,13 @@ def get_instance_segmentation(classes_ids, masks):
         counter += 1
 
     return out_instance
+
+
+def read_instance_segmentation_file(instance_file):
+    assert instance_file.endswith('.png')
+    instance = cv2.imread(instance_file, cv2.IMREAD_UNCHANGED)
+    classes_ids, masks = parse_instance_segmentation(instance)
+    return classes_ids, masks
 
 
 def write_instance_segmentation_file(classes_ids, masks, out_instance_file):
