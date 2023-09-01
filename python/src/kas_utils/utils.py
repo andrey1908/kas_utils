@@ -5,10 +5,10 @@ import os.path as osp
 import glob
 
 
-def show(image, window_name="image", destroy_window=True):
+def show(image, window_name="image", destroy_window=True, wait_ms=0):
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.imshow(window_name, image)
-    key = cv2.waitKey(0)
+    key = cv2.waitKey(wait_ms)
     if destroy_window:
         cv2.destroyWindow(window_name)
     return key
