@@ -26,9 +26,14 @@ def _check_label_fitness(image_size, text_size, text_pos):
 # objects_ids (classes_ids or tracking_ids): shape - (n,), dtype - int
 # boxes: shape - (n, 4), [x1, y1, x2, y2], dtype - int
 # masks: shape - (n, h, w), dtype - np.uint8
-def draw_objects(image, scores, objects_ids, boxes=None, masks=None, min_score=0.0,
+def draw_objects(image, scores=None, objects_ids=None, boxes=None, masks=None, min_score=0.0,
         draw_scores=False, draw_ids=False, draw_boxes=False, draw_masks=False,
         palette=((0, 0, 255),), color_by_object_id=False):
+    if boxes is None and masks is None:
+        raise RuntimeError("Both boxes and masks are None")
+    if color_by_object_id and objects_ids is None:
+        raise RuntimeError("color_by_object_id is set True, but objects_ids is None")
+
     num = None
     if scores is not None:
         assert num is None or len(scores) == num
@@ -43,19 +48,20 @@ def draw_objects(image, scores, objects_ids, boxes=None, masks=None, min_score=0
         assert num is None or len(masks) == num
         num = len(masks)
 
-    if boxes is None and masks is None:
-        raise RuntimeError("Both boxes and masks are None")
-
+    if scores is None:
+        scores = [None] * num
+    if objects_ids is None:
+        objects_ids = [None] * num
     if boxes is None:
-        boxes = [None] * len(scores)
+        boxes = [None] * num
     if masks is None:
-        masks = [None] * len(scores)
+        masks = [None] * num
 
     width = image.shape[1]
     height = image.shape[0]
     overlay = image.copy()
     for i, (score, object_id, box, mask) in enumerate(zip(scores, objects_ids, boxes, masks)):
-        if score < min_score:
+        if score is not None and score < min_score:
             continue
 
         if color_by_object_id:
@@ -93,7 +99,7 @@ def draw_objects(image, scores, objects_ids, boxes=None, masks=None, min_score=0
         if draw_masks:
             overlay[mask != 0] = np.array(color, dtype=np.uint8)
             if not draw_boxes:
-                polygons, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                polygons, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
                 cv2.polylines(image, polygons, True, color, thickness=2)
 
     cv2.addWeighted(image, 0.7, overlay, 0.3, 0, dst=image)
