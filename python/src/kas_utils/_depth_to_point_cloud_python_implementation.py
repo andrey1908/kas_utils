@@ -66,3 +66,12 @@ class DepthToPointCloud:
         if not point_cloud.flags['C_CONTIGUOUS']:
             point_cloud = np.ascontiguousarray(point_cloud)
         return point_cloud
+
+    def set_camera_intrinsics(self, fx, fy, cx, cy):
+        self.fx = fx
+        self.fy = fy
+        self.cx = cx
+        self.cy = cy
+
+    def set_pool_size(self, pool_size):
+        self.pool_size = pool_size

@@ -13,7 +13,7 @@ namespace py = pybind11;
 namespace kas_utils {
 
 template<typename T>
-py::array_t<float> wrapper(const DepthToPointCloud<std::pair<float*, int>>& self,
+py::array_t<float> convertWrapper(const DepthToPointCloud<std::pair<float*, int>>& self,
     py::array_t<T, py::array::c_style> depth_array)
 {
     static_assert(
@@ -62,12 +62,27 @@ py::array_t<float> wrapper(const DepthToPointCloud<std::pair<float*, int>>& self
 }
 
 
+void setCameraIntrinsicsWrapper(DepthToPointCloud<std::pair<float*, int>>& self,
+    float fx, float fy, float cx, float cy)
+{
+    self.setCameraIntrinsics(fx, fy, cx, cy);
+}
+
+
+void setPoolSizeWrapper(DepthToPointCloud<std::pair<float*, int>>& self, int pool_size)
+{
+    self.setPoolSize(pool_size);
+}
+
+
 PYBIND11_MODULE(py_depth_to_point_cloud, m) {
     py::class_<DepthToPointCloud<std::pair<float*, int>>>(m, "DepthToPointCloud")
         .def(py::init<float, float, float, float, int>())
-        .def("convert", &wrapper<std::uint16_t>)
-        .def("convert", &wrapper<float>)
-        .def("convert", &wrapper<double>);
+        .def("convert", &convertWrapper<std::uint16_t>)
+        .def("convert", &convertWrapper<float>)
+        .def("convert", &convertWrapper<double>)
+        .def("set_camera_intrinsics", &setCameraIntrinsicsWrapper)
+        .def("set_pool_size", &setPoolSizeWrapper);
 }
 
 }

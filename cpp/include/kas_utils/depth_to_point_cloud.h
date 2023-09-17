@@ -13,6 +13,18 @@ public:
 
     T convert(const cv::Mat& depth) const;
 
+    void setCameraIntrinsics(float fx, float fy, float cx, float cy)
+    {
+        fx_ = fx;
+        fy_ = fy;
+        cx_ = cx;
+        cy_ = cy;
+    }
+    void setPoolSize(int pool_size)
+    {
+        pool_size_ = pool_size;
+    }
+
 private:
     static T create_point_cloud();
     static void init_point_cloud(T& point_cloud, int points_number);
