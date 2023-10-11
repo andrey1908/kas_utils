@@ -27,9 +27,9 @@ def _check_label_fitness(image_size, text_size, text_pos):
 # boxes: shape - (n, 4), [x1, y1, x2, y2], dtype - int
 # masks: shape - (n, h, w), dtype - np.uint8
 def draw_objects(image,
-        scores=None, objects_ids=None, boxes=None, masks=None, texts=None,
+        scores=None, objects_ids=None, boxes=None, masks=None, customs=None,
         min_score=0.0,
-        draw_scores=False, draw_ids=False, draw_boxes=False, draw_masks=False, draw_texts=False,
+        draw_scores=False, draw_ids=False, draw_boxes=False, draw_masks=False,
         format=None,
         palette=((0, 0, 255),), color_by_object_id=False):
 
@@ -41,7 +41,6 @@ def draw_objects(image,
     if format is None:
         assert not draw_scores or scores is not None
         assert not draw_ids or objects_ids is not None
-        assert not draw_texts or texts is not None
     assert not draw_boxes or boxes is not None
     assert not draw_masks or masks is not None
 
@@ -58,9 +57,9 @@ def draw_objects(image,
     if masks is not None:
         assert num is None or len(masks) == num
         num = len(masks)
-    if texts is not None:
-        assert num is None or len(texts) == num
-        num = len(texts)
+    if customs is not None:
+        assert num is None or len(customs) == num
+        num = len(customs)
 
     if scores is None:
         scores = [None] * num
@@ -70,8 +69,8 @@ def draw_objects(image,
         boxes = [None] * num
     if masks is None:
         masks = [None] * num
-    if texts is None:
-        texts = [None] * num
+    if customs is None:
+        customs = [None] * num
 
     if format is None:
         fields = list()
@@ -79,14 +78,12 @@ def draw_objects(image,
             fields.append("{s:.02f}")
         if draw_ids:
             fields.append("id: {i}")
-        if draw_texts:
-            fields.append("{t}")
         format = ", ".join(fields)
 
     width = image.shape[1]
     height = image.shape[0]
     overlay = image.copy()
-    for i, (score, object_id, box, mask, text) in enumerate(zip(scores, objects_ids, boxes, masks, texts)):
+    for i, (score, object_id, box, mask, custom) in enumerate(zip(scores, objects_ids, boxes, masks, customs)):
         if score is not None and score < min_score:
             continue
 
@@ -96,7 +93,7 @@ def draw_objects(image,
             color = palette[i % len(palette)]
 
         if format:
-            object_text = format.format(s=score, i=object_id, t=text)
+            text = format.format(s=score, i=object_id, c=custom)
             if box is not None:
                 x, y_top, y_bottom = box[0], box[1], box[3]
             else:
@@ -106,12 +103,12 @@ def draw_objects(image,
             font = cv2.FONT_HERSHEY_SIMPLEX
             font_scale = 1
             thickness = 2
-            object_text_size, _ = cv2.getTextSize(object_text, font, font_scale, thickness)
-            dx, dy = _check_label_fitness((width, height), object_text_size, (x, y))
+            text_size, _ = cv2.getTextSize(text, font, font_scale, thickness)
+            dx, dy = _check_label_fitness((width, height), text_size, (x, y))
             x += dx
             if dy > 0:
-                y = y_bottom + object_text_size[1] + 5
-            cv2.putText(image, object_text, (x, y), font, font_scale, color, thickness=thickness)
+                y = y_bottom + text_size[1] + 5
+            cv2.putText(image, text, (x, y), font, font_scale, color, thickness=thickness)
 
         if draw_boxes:
             x1, y1, x2, y2 = box
