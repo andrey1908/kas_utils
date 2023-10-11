@@ -26,13 +26,23 @@ def _check_label_fitness(image_size, text_size, text_pos):
 # objects_ids (classes_ids or tracking_ids): shape - (n,), dtype - int
 # boxes: shape - (n, 4), [x1, y1, x2, y2], dtype - int
 # masks: shape - (n, h, w), dtype - np.uint8
-def draw_objects(image, scores=None, objects_ids=None, boxes=None, masks=None, min_score=0.0,
+def draw_objects(image,
+        scores=None, objects_ids=None, boxes=None, masks=None,
+        min_score=0.0,
         draw_scores=False, draw_ids=False, draw_boxes=False, draw_masks=False,
+        format=None,
         palette=((0, 0, 255),), color_by_object_id=False):
+
     if boxes is None and masks is None:
         raise RuntimeError("Both boxes and masks are None")
     if color_by_object_id and objects_ids is None:
         raise RuntimeError("color_by_object_id is set True, but objects_ids is None")
+
+    if format is None:
+        assert not draw_scores or scores is not None
+        assert not draw_ids or objects_ids is not None
+    assert not draw_boxes or boxes is not None
+    assert not draw_masks or masks is not None
 
     num = None
     if scores is not None:
@@ -57,6 +67,14 @@ def draw_objects(image, scores=None, objects_ids=None, boxes=None, masks=None, m
     if masks is None:
         masks = [None] * num
 
+    if format is None:
+        fields = list()
+        if draw_scores:
+            fields.append("{s:.02f}")
+        if draw_ids:
+            fields.append("id: {i}")
+        format = ", ".join(fields)
+
     width = image.shape[1]
     height = image.shape[0]
     overlay = image.copy()
@@ -69,13 +87,8 @@ def draw_objects(image, scores=None, objects_ids=None, boxes=None, masks=None, m
         else:
             color = palette[i % len(palette)]
 
-        if draw_scores or draw_ids:
-            text = list()
-            if draw_scores:
-                text.append(f"{score:.02f}")
-            if draw_ids:
-                text.append(f"id: {object_id}")
-            text = ", ".join(text)
+        if format:
+            object_text = format.format(s=score, i=object_id)
             if box is not None:
                 x, y_top, y_bottom = box[0], box[1], box[3]
             else:
