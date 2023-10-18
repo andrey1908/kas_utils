@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+from matplotlib.colors import hsv_to_rgb
 from .utils import show, select_roi
 
 
@@ -192,7 +193,14 @@ def plot_h_histogram(image, select_image_roi=True,
     h = hsv[:, :, 0]
     h = h[mask != 0]
     h += shift_h
-    plt.hist(h, bins=256, range=(0, 255))
+
+    _, _, patches = plt.hist(h, bins=256, range=(0, 255))
+    assert len(patches) == 256
+    for i, patch in enumerate(patches):
+        vis_h = (i - shift_h) % 256 / 255
+        r, g, b = hsv_to_rgb([vis_h, 1.0, 1.0])
+        patch.set_facecolor([r, g, b])
+
     if show:
         plt.show()
 
