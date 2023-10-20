@@ -4,7 +4,7 @@ from numbers import Number
 
 def get_masks_rois(masks):
     if len(masks) == 0:
-        return list()
+        return np.empty((0,), dtype=object)
 
     if isinstance(masks, np.ndarray) and masks.ndim == 2:
         masks = np.expand_dims(masks, axis=0)
@@ -24,12 +24,14 @@ def get_masks_rois(masks):
 
     if extended:
         rois = rois[0]
+    else:
+        rois = np.array(rois + [None], dtype=object)[:-1]
     return rois
 
 
 def get_masks_in_rois(masks, rois, copy=True):
     if len(masks) == 0 and len(rois) == 0:
-        return list()
+        return np.empty((0,), dtype=object)
 
     if isinstance(masks, np.ndarray) and masks.ndim == 2:
         masks = np.expand_dims(masks, axis=0)
@@ -39,7 +41,7 @@ def get_masks_in_rois(masks, rois, copy=True):
         extended = False
 
     if len(masks) != len(rois):
-        raise RuntimeError
+        raise RuntimeError("Number of masks and rois is not equal.")
 
     masks_in_rois = list()
     for mask, roi in zip(masks, rois):
@@ -51,6 +53,8 @@ def get_masks_in_rois(masks, rois, copy=True):
 
     if extended:
         masks_in_rois = masks_in_rois[0]
+    else:
+        masks_in_rois = np.array(masks_in_rois + [None], dtype=object)[:-1]
     return masks_in_rois
 
 
@@ -58,7 +62,7 @@ def get_full_masks(masks_in_rois, rois, widths, heights):
     if len(masks_in_rois) == 0 and len(rois) == 0 and \
             (isinstance(widths, Number) or len(widths) == 0) and \
             (isinstance(heights, Number) or len(heights) == 0):
-        return list()
+        return np.empty((0,), dtype=object)
 
     if isinstance(masks_in_rois, np.ndarray) and masks_in_rois.ndim == 2:
         masks_in_rois = np.expand_dims(masks_in_rois, axis=0)
@@ -74,7 +78,7 @@ def get_full_masks(masks_in_rois, rois, widths, heights):
         extended = False
 
     if any(l != len(masks_in_rois) for l in (len(rois), len(widths), len(heights))):
-        raise RuntimeError
+        raise RuntimeError("Number of items is not equal.")
 
     full_masks = list()
     for mask_in_roi, roi, width, height in zip(masks_in_rois, rois, widths, heights):
@@ -84,4 +88,6 @@ def get_full_masks(masks_in_rois, rois, widths, heights):
 
     if extended:
         full_masks = full_masks[0]
+    else:
+        full_masks = np.array(full_masks + [None], dtype=object)[:-1]
     return full_masks
