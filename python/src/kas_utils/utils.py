@@ -38,7 +38,7 @@ def get_depth_scale(depth):
     else:
         dtype = depth
 
-    if dtype == float:
+    if dtype == float or dtype == np.float32:
         scale = 1
     elif dtype == np.uint16:
         scale = 0.001
