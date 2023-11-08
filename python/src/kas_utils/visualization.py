@@ -1,25 +1,6 @@
 import numpy as np
 import cv2
-
-
-def _check_label_fitness(image_size, text_size, text_pos):
-    image_width, image_height = image_size
-    text_width, text_height = text_size
-    text_x, text_y = text_pos
-
-    dx = 0
-    if text_x < 0:
-        dx = -text_x
-    elif text_x + text_width > image_width:
-        dx = image_width - text_x - text_width
-
-    dy = 0
-    if text_y < 0:
-        dy = -text_y
-    elif text_y + text_height > image_height:
-        dy = image_height - text_y - text_height
-
-    return dx, dy
+import colorsys
 
 
 # scores: shape - (n,), dtype - float
@@ -32,6 +13,24 @@ def draw_objects(image,
         draw_scores=False, draw_ids=False, draw_boxes=False, draw_masks=False,
         format=None,
         palette=((0, 0, 255),), color_by_object_id=False):
+
+    def _check_label_fitness(image_size, text_size, text_pos):
+        image_width, image_height = image_size
+        text_width, text_height = text_size
+        text_x, text_y = text_pos
+
+        dx = 0
+        if text_x < 0:
+            dx = -text_x
+        elif text_x + text_width > image_width:
+            dx = image_width - text_x - text_width
+
+        dy = 0
+        if text_y < 0:
+            dy = -text_y
+        elif text_y + text_height > image_height:
+            dy = image_height - text_y - text_height
+        return dx, dy
 
     if boxes is None and masks is None:
         raise RuntimeError("Both boxes and masks are None")
@@ -121,3 +120,25 @@ def draw_objects(image,
                 cv2.polylines(image, polygons, True, color, thickness=2)
 
     cv2.addWeighted(image, 0.7, overlay, 0.3, 0, dst=image)
+
+
+def draw_points(image, K, D, points, radius=2):
+    points_2d, _ = cv2.projectPoints(points, np.zeros((3,)), np.zeros((3,)), K, D)
+    points_2d = points_2d.squeeze()
+    h, w = image.shape[:2]
+    for point, point_2d in zip(points, points_2d):
+        if point[2] <= 0:
+            continue
+        x, y = map(int, point_2d)
+        if x < 0 or y < 0 or x >= w or y >= h:
+            continue
+
+        dist = np.linalg.norm(point)
+        min_dist = 0.2
+        max_dist = 4.0
+        dist = np.clip(dist, min_dist, max_dist)
+        k = (dist - min_dist) / (max_dist - min_dist)
+        hue = int(240 * (1 - k))
+        r, g, b = colorsys.hsv_to_rgb(hue / 360, 1.0, 1.0)
+        r, g, b = [int(item * 255) for item in (r, g, b)]
+        cv2.circle(image, (x, y), radius, (b, g, r), -1)
