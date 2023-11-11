@@ -1,8 +1,13 @@
 import numpy as np
 import cv2
-import os
-import os.path as osp
-import glob
+
+
+def is_float(string: str):
+    try:
+        float(string)
+        return True
+    except:
+        return False
 
 
 def show(image, window_name="image", destroy_window=True, wait_ms=0):
