@@ -9,7 +9,7 @@ except ModuleNotFoundError:
     else:
         raise ImportError(
             "Seems like you did not compile depth_to_point_cloud c++ module. "
-            "Try to set DEPTH_TO_POINT_CLOUD_ALLOW_PYTHON_IMPLEMENTATION environmental "
+            "Try to use DEPTH_TO_POINT_CLOUD_ALLOW_PYTHON_IMPLEMENTATION=1 environmental "
             "variable to allow python implementation or compile c++ module.")
 else:
     os.environ['DEPTH_TO_POINT_CLOUD_PYTHON_IMPLEMENTATION'] = '0'
