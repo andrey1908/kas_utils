@@ -14,7 +14,8 @@ def update_libraries(source_path,
         shutil.copy(file, dst)
 
 
-update_libraries(source_path=osp.join(osp.dirname(__file__), "../cpp/build/"))
+source_path = os.getenv("kas_utils_cpp_LIBRARIES_DIR", osp.join(osp.dirname(__file__), "../cpp/build/"))
+update_libraries(source_path=source_path)
 
 setup(
     name='kas_utils',
