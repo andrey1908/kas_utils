@@ -1,7 +1,7 @@
 get_filename_component(kas_utils_cpp_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 set(kas_utils_cpp_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
 
-find_library(kas_utils_cpp_LIBRARIES NAMES depth_to_point_cloud NO_DEFAULT_PATH HINTS ${kas_utils_cpp_CMAKE_DIR}/../../lib/ REQUIRED)
+find_library(kas_utils_cpp_LIBRARIES NAMES depth_to_point_cloud NO_DEFAULT_PATH HINTS ${kas_utils_cpp_CMAKE_DIR}/../../lib/)
 
 file(GLOB kas_utils_cpp_PYTHON_LIBRARIES ${kas_utils_cpp_CMAKE_DIR}/../../lib/py_*.so)
 get_filename_component(kas_utils_cpp_PYTHON_LIBRARIES ${kas_utils_cpp_PYTHON_LIBRARIES} REALPATH)
