@@ -13,6 +13,16 @@ include_directories(
     ${PCL_INCLUDE_DIRS}
     ${pybind11_INCLUDE_DIRS})
 
+add_library(metrics SHARED
+    src/time_measurer.cc
+)
+add_executable(collection_test src/collection_test.cc)
+add_executable(stamped_collection_test src/stamped_collection_test.cc)
+add_executable(time_measurer_test src/time_measurer_test.cc)
+target_link_libraries(time_measurer_test
+    metrics
+)
+
 if (${OPENCV_FOUND} AND ${PCL_FOUND})
     add_library(depth_to_point_cloud SHARED src/depth_to_point_cloud.cpp)
     target_link_libraries(depth_to_point_cloud
@@ -46,6 +56,11 @@ configure_package_config_file(
 install(
     FILES ${PROJECT_BINARY_DIR}/cmake/kas_utils_cpp/kas_utils_cpp-config.cmake
     DESTINATION share/kas_utils_cpp/
+)
+
+install(
+    TARGETS metrics
+    LIBRARY DESTINATION lib
 )
 
 if (TARGET depth_to_point_cloud)
