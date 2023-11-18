@@ -1,22 +1,51 @@
 import threading
-from threading import Lock
-from time import time
+from time import time, monotonic
+from .collection import Collection
 
 
-class TimeMeasurer:
-    def __init__(self, name, end='', dump_on_deletion=True, skip_first_n=0):
-        self.name = name
-        self.end = end
-        self.dump_on_deletion = dump_on_deletion
-        self.skip_n = skip_first_n
+class TimeMeasurer(Collection):
+    def __init__(self, name, skip_first_n=0):
+        super().__init__(name,
+            print_results=TimeMeasurer.print_results,
+            observation_to_str=TimeMeasurer.observation_to_str)
+        self._abbreviation = "TM"
+        self.skip_first_n = skip_first_n
 
-        self.mutex = Lock()
-        self.start_times = dict()  # key is thread id
-        self.passed_times = list()
+        self.start_stamps_times = dict()  # key is thread id
 
-    def __del__(self):
-        if self.dump_on_deletion:
-            self.dump()
+    def start(self):
+        with self._mutex:
+            thread_id = threading.get_ident()
+            start_stamp = time()
+            start_time = monotonic()
+            self.start_stamps_times[thread_id] = (start_stamp, start_time)
+
+    def stop(self):
+        with self._mutex:
+            if self.skip_first_n > 0:
+                self.skip_first_n -= 1
+                return
+            stop_time = monotonic()
+            thread_id = threading.get_ident()
+            start_stamp, start_time = self.start_stamps_times[thread_id]
+            passed_time = stop_time - start_time
+            self._add_under_lock((start_stamp, passed_time))
+
+    @staticmethod
+    def print_results(name, observations):
+        if len(observations) > 0:
+            start_stamps, passed_times = zip(*observations)
+            total = sum(passed_times)
+            num = len(passed_times)
+            print(f"{name}: {(total / num):.03f}")
+        else:
+            print(f"{name}: no measurements")
+
+    @staticmethod
+    def observation_to_str(observation):
+        start_stamp, passed_time = observation
+        out_str = f"{start_stamp:.06f} {passed_time:.06f}"
+        return out_str
 
     def __enter__(self):
         self.start()
@@ -25,31 +54,5 @@ class TimeMeasurer:
     def __exit__(self, type, value, traceback):
         self.stop()
 
-    def start(self):
-        with self.mutex:
-            thread_id = threading.get_ident()
-            self.start_times[thread_id] = time()
-    
-    def stop(self):
-        with self.mutex:
-            passed_time = self._passed_time_under_lock()
-            if self.skip_n > 0:
-                self.skip_n -= 1
-            else:
-                self.passed_times.append(passed_time)
-        return passed_time
-    
-    def _passed_time_under_lock(self):
-        assert self.mutex.locked()
-        thread_id = threading.get_ident()
-        passed_time = time() - self.start_times[thread_id]
-        return passed_time
-    
-    def dump(self):
-        with self.mutex:
-            if len(self.passed_times) > 0:
-                total = sum(self.passed_times)
-                num = len(self.passed_times)
-                print(f"{self.name}: {(total / num):.03f}{self.end}")
-            else:
-                print(f"{self.name}: no measurements{self.end}")
+    def __del__(self):
+        super().__del__()
