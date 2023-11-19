@@ -5,7 +5,7 @@
 #include <iomanip>
 
 int main() {
-  kas_utils::Collection<double> coll("test_collection", nullptr, nullptr,
+  kas_utils::Collection<double> coll("my_col", "my_group", nullptr, nullptr,
       [](std::ostream& out, double d) {
         out << std::fixed << std::setprecision(6) << d;
       });

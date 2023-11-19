@@ -22,6 +22,14 @@ public:
       V&& headerToOut = nullptr, C&& observationToOut = nullptr) :
     Collection<std::pair<double, T>>(name, std::forward<U>(printSummary),
         std::forward<V>(headerToOut), std::forward<C>(observationToOut)) {};
+
+  template <typename U, typename V, typename C>
+  StampedCollection(const std::string& name, const std::string& group,
+      U&& printSummary = nullptr,
+      V&& headerToOut = nullptr, C&& observationToOut = nullptr) :
+    Collection<std::pair<double, T>>(name, group, std::forward<U>(printSummary),
+        std::forward<V>(headerToOut), std::forward<C>(observationToOut)) {};
+
   ~StampedCollection() = default;
 
   template <typename U>

@@ -5,7 +5,7 @@
 #include <iomanip>
 
 int main() {
-  kas_utils::StampedCollection<double> coll("test_stamped_collection", nullptr, nullptr,
+  kas_utils::StampedCollection<double> coll("my_col", "my_group", nullptr, nullptr,
       [](std::ostream& out, std::pair<double, double> stamp_d) {
         out << std::fixed << std::setprecision(6) << stamp_d.first << ' ' << stamp_d.second;
       });

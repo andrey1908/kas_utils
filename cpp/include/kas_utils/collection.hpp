@@ -23,11 +23,25 @@ public:
       U&& printSummary = nullptr,
       V&& headerToOut = nullptr, C&& observationToOut = nullptr) :
     name_(name),
+    group_(),
     abbreviation_("COL"),
     printSummary_(std::forward<U>(printSummary)),
     headerToOut_(std::forward<V>(headerToOut)),
     observationToOut_(std::forward<C>(observationToOut)),
     construction_time_(std::time(nullptr)) {};
+
+  template <typename U, typename V, typename C>
+  Collection(const std::string& name, const std::string& group,
+      U&& printSummary = nullptr,
+      V&& headerToOut = nullptr, C&& observationToOut = nullptr) :
+    name_(name),
+    group_(group),
+    abbreviation_("COL"),
+    printSummary_(std::forward<U>(printSummary)),
+    headerToOut_(std::forward<V>(headerToOut)),
+    observationToOut_(std::forward<C>(observationToOut)),
+    construction_time_(std::time(nullptr)) {};
+
   ~Collection();
 
   template <typename U>
@@ -56,10 +70,12 @@ public:
 
 protected:
   template <typename U, typename V, typename C>
-  Collection(const std::string& name, const std::string& abbreviation,
+  Collection(const std::string& name, const std::string& group,
+      const std::string& abbreviation,
       U&& printSummary = nullptr,
       V&& headerToOut = nullptr, C&& observationToOut = nullptr) :
     name_(name),
+    group_(group),
     abbreviation_(abbreviation),
     printSummary_(std::forward<U>(printSummary)),
     headerToOut_(std::forward<V>(headerToOut)),
@@ -72,6 +88,7 @@ private:
 private:
   std::mutex mutex_;
   std::string name_;
+  std::string group_;
   std::string abbreviation_;
   std::time_t construction_time_;
 
@@ -118,33 +135,39 @@ Collection<T>::~Collection() {
 
 template <typename T>
 std::string Collection<T>::getOutLogFile() {
-  std::string out_log_file;
-  std::string out_log_file_env_name = name_ + "_" + abbreviation_ + "_LOG_FILE";
-  const char* out_log_file_c = std::getenv(out_log_file_env_name.c_str());
+  const char* out_log_file_c = std::getenv((name_ + "_" + abbreviation_ + "_LOG_FILE").c_str());
+  if ((out_log_file_c == nullptr || strlen(out_log_file_c) == 0) && group_.size() > 0) {
+    out_log_file_c = std::getenv((group_ + "_" + abbreviation_ + "_LOG_FILE").c_str());
+  }
   if (out_log_file_c != nullptr && strlen(out_log_file_c) > 0) {
-    out_log_file = out_log_file_c;
-  } else {
-    std::string out_log_folder_env_name = name_ + "_" + abbreviation_ + "_LOG_FOLDER";
-    const char* out_log_folder_c = std::getenv(out_log_folder_env_name.c_str());
-    if (out_log_folder_c != nullptr && strlen(out_log_folder_c) > 0) {
-      bool success = true;
-      if (!std::filesystem::is_directory(out_log_folder_c)) {
-        if (std::filesystem::exists(out_log_folder_c)) {
-          success = false;
-        } else {
-          success = std::filesystem::create_directories(out_log_folder_c);
-        }
-      }
-      if (success) {
-        char time_str_c[sizeof("yyyy-mm-dd_hh.mm.ss")];
-        std::strftime(time_str_c, sizeof(time_str_c), "%Y-%m-%d_%H.%M.%S", std::localtime(&construction_time_));
-        out_log_file = std::string(out_log_folder_c) + "/" + time_str_c + "_" + name_ + ".txt";
+    std::string out_log_file = out_log_file_c;
+    return out_log_file;
+  }
+
+  const char* out_log_folder_c = std::getenv((name_ + "_" + abbreviation_ + "_LOG_FOLDER").c_str());
+  if ((out_log_folder_c == nullptr || strlen(out_log_folder_c) == 0) && group_.size() > 0) {
+    out_log_folder_c = std::getenv((group_ + "_" + abbreviation_ + "_LOG_FOLDER").c_str());
+  }
+  if (out_log_folder_c != nullptr && strlen(out_log_folder_c) > 0) {
+    bool success = true;
+    if (!std::filesystem::is_directory(out_log_folder_c)) {
+      if (std::filesystem::exists(out_log_folder_c)) {
+        success = false;
       } else {
-        std::cout << "Cloud not create directory " << out_log_folder_c << " for logs.\n";
+        success = std::filesystem::create_directories(out_log_folder_c);
       }
     }
+    if (success) {
+      char time_str_c[sizeof("yyyy-mm-dd_hh.mm.ss")];
+      std::strftime(time_str_c, sizeof(time_str_c), "%Y-%m-%d_%H.%M.%S", std::localtime(&construction_time_));
+      std::string out_log_file = std::string(out_log_folder_c) + "/" + time_str_c + "_" + name_ + ".txt";
+      return out_log_file;
+    } else {
+      std::cout << "Cloud not create directory " << out_log_folder_c << " for logs.\n";
+    }
   }
-  return out_log_file;
+
+  return std::string();
 }
-  
+
 }

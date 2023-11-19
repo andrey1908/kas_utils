@@ -5,8 +5,10 @@ from threading import Lock
 
 
 class Collection:
-    def __init__(self, name, print_results=None, header_to_str=None, observation_to_str=None):
+    def __init__(self, name, group=None,
+            print_results=None, header_to_str=None, observation_to_str=None):
         self.name = name
+        self.group = group
         self.print_results = print_results
         self.header_to_str = header_to_str
         self.observation_to_str = observation_to_str
@@ -47,29 +49,34 @@ class Collection:
 
     def _get_out_log_file(self):
         out_log_file = os.getenv(f"{self.name}_{self._abbreviation}_LOG_FILE")
+        if not out_log_file and self.group:
+            out_log_file = os.getenv(f"{self.group}_{self._abbreviation}_LOG_FILE")
         if out_log_file:
             return out_log_file
-        else:
-            out_log_folder = os.getenv(f"{self.name}_{self._abbreviation}_LOG_FOLDER")
-            if out_log_folder:
-                if not osp.isdir(out_log_folder):
-                    try:
-                        os.makedirs(out_log_folder)
-                    except OSError:
-                        print(f"Could not create directory {out_log_folder}.")
-                        return None
-                creation_time_str = strftime('%Y-%m-%d_%H.%M.%S', localtime(self._construction_time))
-                out_log_file = osp.join(out_log_folder, f"{creation_time_str}_{self.name}.txt")
-                return out_log_file
-            else:
-                return None
+
+        out_log_folder = os.getenv(f"{self.name}_{self._abbreviation}_LOG_FOLDER")
+        if not out_log_folder and self.group:
+            out_log_folder = os.getenv(f"{self.group}_{self._abbreviation}_LOG_FOLDER")
+        if out_log_folder:
+            if not osp.isdir(out_log_folder):
+                try:
+                    os.makedirs(out_log_folder)
+                except OSError:
+                    print(f"Could not create directory {out_log_folder}.")
+                    return None
+            creation_time_str = strftime('%Y-%m-%d_%H.%M.%S', localtime(self._construction_time))
+            out_log_file = osp.join(out_log_folder, f"{creation_time_str}_{self.name}.txt")
+            return out_log_file
+
+        return None
 
 
 class StampedCollection(Collection):
-    def __init__(name, print_results=None, header_to_str=None, observation_to_str=None):
-        super().__init__(name, print_results=print_results,
+    def __init__(name, group=None,
+            print_results=None, header_to_str=None, observation_to_str=None):
+        super().__init__(name, group=group, print_results=print_results,
             header_to_str=header_to_str, observation_to_str=observation_to_str)
-    
+
     def add(self, observation):
         stamp = time()
         super().add((stamp, observation))
