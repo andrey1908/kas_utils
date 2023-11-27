@@ -122,7 +122,7 @@ def draw_objects(image,
     cv2.addWeighted(image, 0.7, overlay, 0.3, 0, dst=image)
 
 
-def draw_points(image, K, D, points, radius=2):
+def draw_points(image, K, D, points, min_distance=0.2, max_distance=4.0, radius=2):
     points_2d, _ = cv2.projectPoints(points, np.zeros((3,)), np.zeros((3,)), K, D)
     points_2d = points_2d.squeeze()
     h, w = image.shape[:2]
@@ -134,10 +134,8 @@ def draw_points(image, K, D, points, radius=2):
             continue
 
         dist = np.linalg.norm(point)
-        min_dist = 0.2
-        max_dist = 4.0
-        dist = np.clip(dist, min_dist, max_dist)
-        k = (dist - min_dist) / (max_dist - min_dist)
+        dist = np.clip(dist, min_distance, max_distance)
+        k = (dist - min_distance) / (max_distance - min_distance)
         hue = int(240 * (1 - k))
         r, g, b = colorsys.hsv_to_rgb(hue / 360, 1.0, 1.0)
         r, g, b = [int(item * 255) for item in (r, g, b)]
