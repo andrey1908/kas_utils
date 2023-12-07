@@ -5,14 +5,6 @@ import argparse
 import numpy as np
 
 
-def is_float(string: str):
-    try:
-        float(string)
-        return True
-    except:
-        return False
-
-
 def build_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-log', '--log-file', type=str, required=True)
