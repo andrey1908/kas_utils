@@ -18,8 +18,8 @@ private:
     };
 
 public:
-    Dilation(int dilation_size);
-    void initialize(int dilation_size);
+    Dilation(int dilation_size, bool include_border = false);
+    void initialize(int dilation_size, bool include_border = false);
 
     template <typename T, size_t size>
     cv::Mat dilate(const cv::Mat& image, const T (&background_colors)[size],
@@ -35,7 +35,9 @@ private:
 
 private:
     int dilation_size_;
-    int dilation_size_sqr_;
+    bool include_border_;
+
+    float dilation_radius_sqr_;
     int dilation_width_;
 
     std::vector<PixelCoords> dilation_pixels_;
