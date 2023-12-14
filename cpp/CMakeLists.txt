@@ -27,33 +27,37 @@ if (${OPENCV_FOUND} AND ${PCL_FOUND})
     add_library(depth_to_point_cloud SHARED src/depth_to_point_cloud.cpp)
     target_link_libraries(depth_to_point_cloud
         ${OpenCV_LIBS}
-        ${PCL_LIBRARIES})
+        ${PCL_LIBRARIES}
+    )
 
     if (${pybind11_FOUND})
         pybind11_add_module(py_depth_to_point_cloud
             src/depth_to_point_cloud.cpp
-            py_wrap/py_wrap_depth_to_point_cloud.cpp)
+            py_wrap/py_wrap_depth_to_point_cloud.cpp
+        )
         target_link_libraries(py_depth_to_point_cloud PRIVATE
             ${OpenCV_LIBS}
             ${PCL_LIBRARIES}
-            ${pybind11_LIBRARIES})
+            ${pybind11_LIBRARIES}
+        )
     endif()
 endif()
 
 if (${OPENCV_FOUND})
     add_library(dilation SHARED src/dilation.cpp)
     target_link_libraries(dilation
-        ${OpenCV_LIBS})
+        ${OpenCV_LIBS}
+    )
 endif()
 
-set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include")
-set(KAS_UTILS_CPP_CMAKE_DIR share/kas_utils_cpp/cmake)
 include(CMakePackageConfigHelpers)
+set(INCLUDE_DIRS "include")
+set(LIBRARY_DIRS "lib")
 configure_package_config_file(
     kas_utils_cpp-config.cmake.in
     ${PROJECT_BINARY_DIR}/cmake/kas_utils_cpp/kas_utils_cpp-config.cmake
-    PATH_VARS KAS_UTILS_CPP_CMAKE_DIR
     INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kas_utils_cpp
+    PATH_VARS INCLUDE_DIRS LIBRARY_DIRS
 )
 
 install(

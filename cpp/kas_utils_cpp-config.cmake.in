@@ -1,19 +1,21 @@
-get_filename_component(kas_utils_cpp_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-set(kas_utils_cpp_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
+@PACKAGE_INIT@
 
-find_library(kas_utils_cpp_metrics_LIBRARY NAMES metrics NO_DEFAULT_PATH HINTS ${kas_utils_cpp_CMAKE_DIR}/../../lib/ REQUIRED)
-find_library(kas_utils_cpp_depth_to_point_cloud_LIBRARY NAMES depth_to_point_cloud NO_DEFAULT_PATH HINTS ${kas_utils_cpp_CMAKE_DIR}/../../lib/)
-find_library(kas_utils_cpp_dilation_LIBRARY NAMES dilation NO_DEFAULT_PATH HINTS ${kas_utils_cpp_CMAKE_DIR}/../../lib/)
+set(kas_utils_cpp_INCLUDE_DIRS "@PACKAGE_INCLUDE_DIRS@")
+
+find_library(kas_utils_cpp_metrics_LIBRARY NAMES metrics NO_DEFAULT_PATH HINTS "@PACKAGE_LIBRARY_DIRS@" REQUIRED)
+find_library(kas_utils_cpp_depth_to_point_cloud_LIBRARY NAMES depth_to_point_cloud NO_DEFAULT_PATH HINTS "@PACKAGE_LIBRARY_DIRS@")
+find_library(kas_utils_cpp_dilation_LIBRARY NAMES dilation NO_DEFAULT_PATH HINTS "@PACKAGE_LIBRARY_DIRS@")
 
 list(APPEND kas_utils_cpp_LIBRARIES
     ${kas_utils_cpp_metrics_LIBRARY}
     ${kas_utils_cpp_depth_to_point_cloud_LIBRARY}
-    ${kas_utils_cpp_dilation_LIBRARY})
+    ${kas_utils_cpp_dilation_LIBRARY}
+)
 
-file(GLOB kas_utils_cpp_PYTHON_LIBRARIES ${kas_utils_cpp_CMAKE_DIR}/../../lib/py_*.so)
+file(GLOB kas_utils_cpp_PYTHON_LIBRARIES "@PACKAGE_LIBRARY_DIRS@/py_*.so")
 if (kas_utils_cpp_PYTHON_LIBRARIES)
     get_filename_component(kas_utils_cpp_PYTHON_LIBRARIES ${kas_utils_cpp_PYTHON_LIBRARIES} REALPATH)
 endif()
 
-set(kas_utils_cpp_LIBRARIES_DIR ${kas_utils_cpp_CMAKE_DIR}/../../lib/)
+set(kas_utils_cpp_LIBRARIES_DIR "@PACKAGE_LIBRARY_DIRS@")
 get_filename_component(kas_utils_cpp_LIBRARIES_DIR ${kas_utils_cpp_LIBRARIES_DIR} REALPATH)
