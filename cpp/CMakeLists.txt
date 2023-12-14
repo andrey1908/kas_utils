@@ -46,9 +46,6 @@ if (${OPENCV_FOUND})
         ${OpenCV_LIBS})
 endif()
 
-# Install package.xml for catkin
-install(FILES package.xml DESTINATION share/kas_utils_cpp/)
-
 set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include")
 set(KAS_UTILS_CPP_CMAKE_DIR share/kas_utils_cpp/cmake)
 include(CMakePackageConfigHelpers)
@@ -60,8 +57,18 @@ configure_package_config_file(
 )
 
 install(
+    FILES package.xml
+    DESTINATION share/kas_utils_cpp
+)
+
+install(
     FILES ${PROJECT_BINARY_DIR}/cmake/kas_utils_cpp/kas_utils_cpp-config.cmake
-    DESTINATION share/kas_utils_cpp/
+    DESTINATION share/kas_utils_cpp
+)
+
+install(
+    DIRECTORY ${CMAKE_SOURCE_DIR}/include/kas_utils
+    DESTINATION include
 )
 
 install(
