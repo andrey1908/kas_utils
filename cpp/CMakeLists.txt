@@ -40,6 +40,12 @@ if (${OPENCV_FOUND} AND ${PCL_FOUND})
     endif()
 endif()
 
+if (${OPENCV_FOUND})
+    add_library(dilation SHARED src/dilation.cpp)
+    target_link_libraries(dilation
+        ${OpenCV_LIBS})
+endif()
+
 # Install package.xml for catkin
 install(FILES package.xml DESTINATION share/kas_utils_cpp/)
 
@@ -73,6 +79,13 @@ endif()
 if (TARGET py_depth_to_point_cloud)
     install(
         TARGETS py_depth_to_point_cloud
+        LIBRARY DESTINATION lib
+    )
+endif()
+
+if (TARGET dilation)
+    install(
+        TARGETS dilation
         LIBRARY DESTINATION lib
     )
 endif()
