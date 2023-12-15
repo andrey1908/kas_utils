@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>kas_utils</name>
+  <name>kas_utils_python</name>
   <version>0.0.1</version>
-  <description>The kas_utils package</description>
+  <description>The kas_utils_python package</description>
 
   <maintainer email="cds-jetson-host@todo.todo">cds-jetson-host</maintainer>
 

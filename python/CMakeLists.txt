@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(kas_utils)
+project(kas_utils_python)
 
 find_package(kas_utils_cpp REQUIRED)
 
@@ -8,7 +8,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/python_path.ds
 
 install(
     FILES package.xml
-    DESTINATION share/kas_utils
+    DESTINATION share/${PROJECT_NAME}
 )
 
 install(

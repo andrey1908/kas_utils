@@ -1,3 +1,3 @@
 {
-    "hooks": ["share/kas_utils/hook/python_path.dsv"]
+    "hooks": ["share/kas_utils_python/hook/python_path.dsv"]
 }
