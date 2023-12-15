@@ -13,9 +13,7 @@ def update_libraries(source_path,
     for file in glob.glob(f"{source_path}/py_*.so"):
         shutil.copy(file, dst)
 
-
-source_path = os.getenv("kas_utils_cpp_LIBRARIES_DIR", osp.join(osp.dirname(__file__), "../cpp/build/"))
-update_libraries(source_path=source_path)
+update_libraries(source_path="../cpp/build/")
 
 setup(
     name='kas_utils',

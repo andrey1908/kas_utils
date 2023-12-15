@@ -90,7 +90,7 @@ endif()
 if (TARGET py_depth_to_point_cloud)
     install(
         TARGETS py_depth_to_point_cloud
-        LIBRARY DESTINATION lib
+        LIBRARY DESTINATION lib/python3/dist-packages
     )
 endif()
 
