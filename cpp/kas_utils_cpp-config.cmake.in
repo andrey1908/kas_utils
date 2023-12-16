@@ -24,6 +24,11 @@ list(APPEND kas_utils_cpp_LIBRARIES
     ${kas_utils_cpp_dilation_LIBRARY}
 )
 
+set(kas_utils_cpp_LIBRARIES_DIR "@PACKAGE_LIBRARY_DIRS@")
+get_filename_component(
+    kas_utils_cpp_LIBRARIES_DIR
+    ${kas_utils_cpp_LIBRARIES_DIR} REALPATH)
+
 file(GLOB kas_utils_cpp_depth_to_point_cloud_PYTHON_LIBRARY
     "@PACKAGE_LIBRARY_DIRS@/python3/dist-packages/py_depth_to_point_cloud.*.so"
 )
@@ -34,6 +39,3 @@ if (kas_utils_cpp_depth_to_point_cloud_PYTHON_LIBRARY)
 endif()
 list(APPEND kas_utils_cpp_PYTHON_LIBRARIES
     ${kas_utils_cpp_depth_to_point_cloud_PYTHON_LIBRARY})
-
-set(kas_utils_cpp_LIBRARIES_DIR "@PACKAGE_LIBRARY_DIRS@")
-get_filename_component(kas_utils_cpp_LIBRARIES_DIR ${kas_utils_cpp_LIBRARIES_DIR} REALPATH)
