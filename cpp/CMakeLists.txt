@@ -51,13 +51,13 @@ if (${OPENCV_FOUND})
 endif()
 
 include(CMakePackageConfigHelpers)
-set(INCLUDE_DIRS "include")
-set(LIBRARY_DIRS "lib")
+set(INCLUDE_DIR "include")
+set(LIBRARY_DIR "lib")
 configure_package_config_file(
     kas_utils_cpp-config.cmake.in
     ${PROJECT_BINARY_DIR}/cmake/kas_utils_cpp/kas_utils_cpp-config.cmake
     INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kas_utils_cpp
-    PATH_VARS INCLUDE_DIRS LIBRARY_DIRS
+    PATH_VARS INCLUDE_DIR LIBRARY_DIR
 )
 
 install(
