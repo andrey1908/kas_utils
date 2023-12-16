@@ -5,15 +5,20 @@ import os
 import os.path as osp
 
 
-def update_libraries(source_path,
+def update_libraries(libraries,
         dst=osp.join(osp.dirname(__file__), "src/kas_utils/")):
-    for file in glob.glob(f"{dst}/py_*.so"):
-        os.remove(file)
+    for old_library in glob.glob(f"{dst}/py_*.so"):
+        os.remove(old_library)
+    for library in libraries:
+        shutil.copy(library, dst)
 
-    for file in glob.glob(f"{source_path}/py_*.so"):
-        shutil.copy(file, dst)
-
-update_libraries(source_path="../cpp/build/")
+libraries = os.getenv("kas_utils_cpp_PYTHON_LIBRARIES")
+if libraries:
+    libraries = libraries.split(';')
+else:
+    src = osp.join(osp.dirname(__file__), "../cpp/build/")
+    libraries = glob.glob(f"{src}/py_*.so")
+update_libraries(libraries=libraries)
 
 setup(
     name='kas_utils',
