@@ -1,4 +1,4 @@
-#include "kas_utils/utils.h"
+#include "kas_utils/utils.hpp"
 #include "kas_utils/time_measurer.h"
 
 #include <sstream>

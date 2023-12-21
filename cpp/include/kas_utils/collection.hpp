@@ -1,6 +1,6 @@
 #pragma once
 
-#include "kas_utils/utils.h"
+#include "kas_utils/utils.hpp"
 
 #include <vector>
 #include <string>
