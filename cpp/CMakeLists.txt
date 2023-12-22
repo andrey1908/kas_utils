@@ -5,13 +5,16 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(OpenCV)
 find_package(PCL)
+find_package(yaml-cpp)
 find_package(pybind11)
 
 include_directories(
     include
     ${OpenCV_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
-    ${pybind11_INCLUDE_DIRS})
+    ${YAML_CPP_INCLUDE_DIR}
+    ${pybind11_INCLUDE_DIRS}
+)
 
 add_library(metrics SHARED
     src/time_measurer.cc
