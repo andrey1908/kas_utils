@@ -23,6 +23,7 @@ void Dilation::initialize(int dilation_size, bool include_border /* false */) {
             dilation_radius_sqr_ = (dilation_size_ + 0.5f) * (dilation_size_ + 0.5f);
         } else {
             dilation_radius_sqr_ = dilation_size_ * dilation_size_;
+            dilation_radius_sqr_ += 0.5f;  // to ensure that comparison in computeDilationPixels() function will be correct
         }
         dilation_width_ = 2 * dilation_size_ + 1;
         computeDilationPixels();
