@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(OpenCV)
 find_package(PCL)
 find_package(yaml-cpp)
+find_package(CGAL)
 find_package(pybind11)
 
 include_directories(
@@ -13,6 +14,7 @@ include_directories(
     ${OpenCV_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIR}
+    ${CGAL_INCLUDE_DIRS}
     ${pybind11_INCLUDE_DIRS}
 )
 
@@ -50,6 +52,13 @@ if (${OPENCV_FOUND})
     add_library(dilation SHARED src/dilation.cpp)
     target_link_libraries(dilation
         ${OpenCV_LIBS}
+    )
+endif()
+
+if (${CGAL_FOUND})
+    add_library(cgal_utils SHARED src/cgal_utils.cc)
+    target_link_libraries(cgal_utils
+        ${CGAL_LIBRARIES}
     )
 endif()
 
@@ -102,4 +111,11 @@ if (TARGET dilation)
         TARGETS dilation
         LIBRARY DESTINATION lib
     )
+endif()
+
+if (TARGET cgal_utils)
+    install(
+        TARGETS cgal_utils
+        LIBRARY DESTINATION lib
+)
 endif()
