@@ -7,16 +7,23 @@
 namespace kas_utils {
 
 Polyhedron make_parallelepiped(
-        const Point& p, const Vector& v1, const Vector& v2, const Vector& v3) {
+        const Point& p, const Vector& v1, const Vector& v2, const Vector& v3,
+        bool triangle_faces /* false */) {
     typedef CGAL::HalfedgeDS_decorator<Polyhedron::HDS> HalfedgeDS_decorator;
     typedef Polyhedron::Halfedge_handle Halfedge_handle;
 
     Polyhedron parallelepiped;
-    parallelepiped.reserve(8, 24, 6);
+    if (triangle_faces) {
+        parallelepiped.reserve(8, 36, 12);
+    } else {
+        parallelepiped.reserve(8, 24, 6);
+    }
+
     HalfedgeDS_decorator decorator(parallelepiped.hds());
     Halfedge_handle h1, h2, h3, h4;
     Halfedge_handle g1, g2;
     Halfedge_handle f1, f2;
+    Halfedge_handle e1, e2;
 
     h1 = decorator.create_loop();
     h2 = parallelepiped.split_edge(h1);
@@ -31,8 +38,17 @@ Polyhedron make_parallelepiped(
     f2 = parallelepiped.split_edge(f1);
     h3 = parallelepiped.split_facet(h4, h3);
 
-    parallelepiped.split_facet(f1->opposite(), g1->next()->opposite());
-    parallelepiped.split_facet(f1->next()->opposite(), g1->opposite());
+    e1 = parallelepiped.split_facet(f1->opposite(), g1->next()->opposite());
+    e2 = parallelepiped.split_facet(f1->next()->opposite(), g1->opposite());
+
+    if (triangle_faces) {
+        parallelepiped.split_facet(h1, h3);
+        parallelepiped.split_facet(g1, g2->prev());
+        parallelepiped.split_facet(f2, f1->next());
+        parallelepiped.split_facet(e1, e1->next()->next());
+        parallelepiped.split_facet(e2, e2->next()->next());
+        parallelepiped.split_facet(e1->opposite(), e1->opposite()->next()->next());
+    }
 
     h1->vertex()->point() = p;
     h2->vertex()->point() = p + v1;

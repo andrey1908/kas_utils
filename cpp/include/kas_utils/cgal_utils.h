@@ -13,6 +13,7 @@ typedef K::Vector_3 Vector;
 typedef CGAL::Polyhedron_3<K> Polyhedron;
 
 Polyhedron make_parallelepiped(
-    const Point& p, const Vector& v1, const Vector& v2, const Vector& v3);
+    const Point& p, const Vector& v1, const Vector& v2, const Vector& v3,
+    bool triangle_faces = false);
 
 }
