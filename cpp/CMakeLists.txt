@@ -55,6 +55,13 @@ if (${OPENCV_FOUND})
     )
 endif()
 
+if (${yaml-cpp_FOUND})
+    add_library(yaml_utils SHARED src/yaml_utils.cc)
+    target_link_libraries(yaml_utils
+        ${YAML_CPP_LIBRARIES}
+    )
+endif()
+
 if (${CGAL_FOUND})
     add_library(cgal_utils SHARED src/cgal_utils.cc)
     target_link_libraries(cgal_utils
@@ -113,9 +120,16 @@ if (TARGET dilation)
     )
 endif()
 
+if (TARGET yaml_utils)
+    install(
+        TARGETS yaml_utils
+        LIBRARY DESTINATION lib
+    )
+endif()
+
 if (TARGET cgal_utils)
     install(
         TARGETS cgal_utils
         LIBRARY DESTINATION lib
-)
+    )
 endif()
