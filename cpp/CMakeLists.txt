@@ -29,7 +29,7 @@ target_link_libraries(time_measurer_test
 )
 
 if (${OPENCV_FOUND} AND ${PCL_FOUND})
-    add_library(depth_to_point_cloud SHARED src/depth_to_point_cloud.cpp)
+    add_library(depth_to_point_cloud SHARED src/depth_to_point_cloud.cc)
     target_link_libraries(depth_to_point_cloud
         ${OpenCV_LIBS}
         ${PCL_LIBRARIES}
@@ -37,8 +37,8 @@ if (${OPENCV_FOUND} AND ${PCL_FOUND})
 
     if (${pybind11_FOUND})
         pybind11_add_module(py_depth_to_point_cloud
-            src/depth_to_point_cloud.cpp
-            py_wrap/py_wrap_depth_to_point_cloud.cpp
+            src/depth_to_point_cloud.cc
+            py_wrap/py_wrap_depth_to_point_cloud.cc
         )
         target_link_libraries(py_depth_to_point_cloud PRIVATE
             ${OpenCV_LIBS}
@@ -49,7 +49,7 @@ if (${OPENCV_FOUND} AND ${PCL_FOUND})
 endif()
 
 if (${OPENCV_FOUND})
-    add_library(dilation SHARED src/dilation.cpp)
+    add_library(dilation SHARED src/dilation.cc)
     target_link_libraries(dilation
         ${OpenCV_LIBS}
     )
