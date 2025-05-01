@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iterator>
 #include <vector>
+#include <array>
 
 namespace kas_utils {
 
@@ -22,6 +23,15 @@ inline typename std::vector<T>::iterator fastErase(
     *it = v.back();
     v.pop_back();
     return it;
+}
+
+template<typename toType, typename fromType, std::size_t N>
+inline std::array<toType, N> castArray(const std::array<fromType, N>& fromArray) {
+    std::array<toType, N> toArray;
+    for (std::size_t i = 0; i < N; i++) {
+        toArray[i] = static_cast<toType>(fromArray[i]);
+    }
+    return toArray;
 }
 
 }
