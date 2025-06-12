@@ -90,7 +90,7 @@ install(
 )
 
 install(
-    DIRECTORY ${CMAKE_SOURCE_DIR}/include/kas_utils
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/kas_utils
     DESTINATION include
 )
 

@@ -8,7 +8,7 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 add_custom_target(custom ALL
     COMMAND ${CMAKE_COMMAND} -E env kas_utils_cpp_PYTHON_LIBRARIES=${kas_utils_cpp_PYTHON_LIBRARIES}
         ${Python3_EXECUTABLE} setup.py develop --prefix develop
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 install(
@@ -20,7 +20,7 @@ install(
 install(
     CODE "
         file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages)
-        file(CREATE_LINK ${CMAKE_SOURCE_DIR}/src/kas_utils ${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages/kas_utils SYMBOLIC)"
+        file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/src/kas_utils ${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages/kas_utils SYMBOLIC)"
 )
 
 # create environment hook for ROS2
