@@ -18,15 +18,15 @@ include_directories(
     ${pybind11_INCLUDE_DIRS}
 )
 
-add_library(metrics SHARED
-    src/time_measurer.cc
-)
+add_library(kas_utils SHARED src/utils.cc)  # use name "kas_utils" to avoid conflicts when used as subdirectory in another projects
+add_library(metrics SHARED src/time_measurer.cc)
+target_link_libraries(metrics kas_utils)
 add_executable(collection_test src/collection_test.cc)
+target_link_libraries(collection_test kas_utils)
 add_executable(stamped_collection_test src/stamped_collection_test.cc)
+target_link_libraries(stamped_collection_test kas_utils)
 add_executable(time_measurer_test src/time_measurer_test.cc)
-target_link_libraries(time_measurer_test
-    metrics
-)
+target_link_libraries(time_measurer_test metrics)
 
 if (${OPENCV_FOUND} AND ${PCL_FOUND})
     add_library(depth_to_point_cloud SHARED src/depth_to_point_cloud.cc)
@@ -95,7 +95,7 @@ install(
 )
 
 install(
-    TARGETS metrics
+    TARGETS kas_utils metrics
     LIBRARY DESTINATION lib
 )
 

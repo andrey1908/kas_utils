@@ -8,6 +8,8 @@
 
 namespace kas_utils {
 
+extern const std::time_t START_TIME;
+
 template <typename T>
 double toSeconds(const T& duration) {
     return std::chrono::duration_cast<std::chrono::duration<double>>(duration).count();

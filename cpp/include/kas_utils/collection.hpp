@@ -28,7 +28,7 @@ public:
     printSummary_(std::forward<U>(printSummary)),
     headerToOut_(std::forward<V>(headerToOut)),
     observationToOut_(std::forward<C>(observationToOut)),
-    construction_time_(std::time(nullptr)) {};
+    start_time_(START_TIME) {};
 
   template <typename U, typename V, typename C>
   Collection(const std::string& name, const std::string& group,
@@ -40,7 +40,7 @@ public:
     printSummary_(std::forward<U>(printSummary)),
     headerToOut_(std::forward<V>(headerToOut)),
     observationToOut_(std::forward<C>(observationToOut)),
-    construction_time_(std::time(nullptr)) {};
+    start_time_(START_TIME) {};
 
   ~Collection();
 
@@ -80,7 +80,7 @@ protected:
     printSummary_(std::forward<U>(printSummary)),
     headerToOut_(std::forward<V>(headerToOut)),
     observationToOut_(std::forward<C>(observationToOut)),
-    construction_time_(std::time(nullptr)) {};
+    start_time_(START_TIME) {};
 
 private:
   std::string getOutLogFile();
@@ -90,7 +90,7 @@ private:
   std::string name_;
   std::string group_;
   std::string abbreviation_;
-  std::time_t construction_time_;
+  std::time_t start_time_;
 
   std::function<void(const std::string&, const std::vector<T>&)> printSummary_;
   std::function<void(std::ostream&)> headerToOut_;
@@ -159,7 +159,7 @@ std::string Collection<T>::getOutLogFile() {
     }
     if (success) {
       char time_str_c[sizeof("yyyy-mm-dd_hh.mm.ss")];
-      std::strftime(time_str_c, sizeof(time_str_c), "%Y-%m-%d_%H.%M.%S", std::localtime(&construction_time_));
+      std::strftime(time_str_c, sizeof(time_str_c), "%Y-%m-%d_%H.%M.%S", std::localtime(&start_time_));
       std::string out_log_file = std::string(out_log_folder_c) + "/" + time_str_c + "_" + name_ + ".txt";
       return out_log_file;
     } else {

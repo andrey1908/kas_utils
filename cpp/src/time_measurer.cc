@@ -41,7 +41,7 @@ static void observationToOut(std::ostream& out,
 
 TimeMeasurer::TimeMeasurer(const std::string& name,
     bool print_results_on_destruction /* false */) :
-  Collection<std::pair<double, double>>(name, "", "TM",
+  Collection<std::pair<double, double>>(name, "time_measurers", "TM",
       nullptr /* will be set in destructor */, nullptr, observationToOut),
   print_results_on_destruction_(print_results_on_destruction) {}
 
