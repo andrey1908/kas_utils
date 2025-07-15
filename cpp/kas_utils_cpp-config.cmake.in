@@ -8,11 +8,6 @@ find_library(kas_utils_cpp_utils_LIBRARY kas_utils
     PATHS "@PACKAGE_LIBRARY_DIR@"
     NO_DEFAULT_PATH
 )
-find_library(kas_utils_cpp_metrics_LIBRARY metrics
-    REQUIRED
-    PATHS "@PACKAGE_LIBRARY_DIR@"
-    NO_DEFAULT_PATH
-)
 find_library(kas_utils_cpp_depth_to_point_cloud_LIBRARY depth_to_point_cloud
     PATHS "@PACKAGE_LIBRARY_DIR@"
     NO_DEFAULT_PATH
@@ -30,7 +25,6 @@ find_library(kas_utils_cpp_cgal_utils_LIBRARY cgal_utils
     NO_DEFAULT_PATH
 )
 list(APPEND kas_utils_cpp_LIBRARIES
-    ${kas_utils_cpp_metrics_LIBRARY}
     ${kas_utils_cpp_utils_LIBRARY}
     ${kas_utils_cpp_depth_to_point_cloud_LIBRARY}
     ${kas_utils_cpp_dilation_LIBRARY}
