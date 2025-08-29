@@ -26,7 +26,7 @@ target_link_libraries(stamped_collection_test kas_utils)
 add_executable(time_measurer_test src/time_measurer_test.cc)
 target_link_libraries(time_measurer_test kas_utils)
 
-if (${OPENCV_FOUND} AND ${PCL_FOUND})
+if ((${OPENCV_FOUND}) AND (${PCL_FOUND}))
     add_library(depth_to_point_cloud SHARED src/depth_to_point_cloud.cc)
     target_link_libraries(depth_to_point_cloud
         ${OpenCV_LIBS}
